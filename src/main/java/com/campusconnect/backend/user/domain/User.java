@@ -1,6 +1,6 @@
 package com.campusconnect.backend.user.domain;
 
-import com.campusconnect.backend.user.basetime.BaseTimeEntity;
+import com.campusconnect.backend.basetime.BaseTimeEntity;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Getter;

@@ -1,4 +1,4 @@
-package com.campusconnect.backend.user.basetime;
+package com.campusconnect.backend.basetime;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.EntityListeners;
@@ -8,13 +8,12 @@ import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.LastModifiedDate;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
-import java.time.LocalDate;
 import java.time.LocalDateTime;
 
 @Getter
 @MappedSuperclass
 @EntityListeners(AuditingEntityListener.class)
-public class BaseTimeEntity {
+public abstract class BaseTimeEntity {
 
     @CreatedDate
     @JsonIgnore
@@ -22,5 +21,5 @@ public class BaseTimeEntity {
 
     @LastModifiedDate
     @JsonIgnore
-    private LocalDate modifiedDate;
+    private LocalDateTime modifiedDate;
 }
