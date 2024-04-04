@@ -8,6 +8,7 @@ build/
 ## Properties ###
 application.yml
 application-*.yml
+application-*.properties
 
 ### STS ###
 .apt_generated
