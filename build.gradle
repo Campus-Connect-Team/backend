@@ -37,6 +37,7 @@ dependencies {
 	implementation 'org.springframework.boot:spring-boot-starter-web'
 	implementation 'org.springframework.boot:spring-boot-starter-websocket'
 	implementation 'org.thymeleaf.extras:thymeleaf-extras-springsecurity6'
+	implementation 'org.springframework.cloud:spring-cloud-starter-aws:2.2.6.RELEASE'
 
 	// **Spring Boot 3.0 이상: Hibernate5JakartaModule 등록**
 	implementation 'com.fasterxml.jackson.datatype:jackson-datatype-hibernate5-jakarta'
