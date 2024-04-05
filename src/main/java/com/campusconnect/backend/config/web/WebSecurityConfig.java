@@ -12,6 +12,11 @@ import org.springframework.security.config.annotation.web.configurers.HeadersCon
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.web.cors.CorsConfiguration;
+import org.springframework.web.cors.CorsConfigurationSource;
+import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
+
+import java.util.List;
 
 @Configuration
 @EnableGlobalMethodSecurity(prePostEnabled = true)
@@ -31,15 +36,14 @@ public class WebSecurityConfig {
                 .headers((headers) -> headers.frameOptions(HeadersConfigurer.FrameOptionsConfig::disable))
                 .formLogin(Customizer.withDefaults())
                 .authorizeHttpRequests(authorizeRequest -> authorizeRequest
-                        .requestMatchers(("/user/**")).hasAuthority("USER")
                         .requestMatchers(("/board/**")).hasAuthority("USER")
                         .anyRequest()
                         .permitAll()
                 )
 
                 .formLogin(customizer -> customizer
-                        .loginPage("/login")
-                        .loginProcessingUrl("/login")
+                        .loginPage("/user/login")
+                        .loginProcessingUrl("/user/login")
                         .defaultSuccessUrl("/")
                         .usernameParameter("userNumber")
                         .passwordParameter("password")
@@ -47,11 +51,25 @@ public class WebSecurityConfig {
                 )
 
                 .logout(customizer -> customizer
-                        .logoutUrl("/logout")
+                        .logoutUrl("/user/logout")
                         .logoutSuccessUrl("/")
                         .invalidateHttpSession(true)
                         .deleteCookies("JSESSIONID")
                 )
                 .build();
+    }
+
+    @Bean
+    CorsConfigurationSource corsConfiguration() {
+        CorsConfiguration configuration = new CorsConfiguration();
+        configuration.setAllowedOrigins(List.of("http://localhost:3000"));
+        configuration.addAllowedHeader("*");  // "Authorization", "Cache-Control", "Content-Type"
+        configuration.addAllowedMethod("*");  // "GET", "POST", "PUT", "DELETE", "HEAD", "OPTIONS" ...
+        configuration.setAllowCredentials(true);
+
+        UrlBasedCorsConfigurationSource urlBasedCorsConfigurationSource = new UrlBasedCorsConfigurationSource();
+        urlBasedCorsConfigurationSource.registerCorsConfiguration("/**", configuration);
+
+        return urlBasedCorsConfigurationSource;
     }
 }
