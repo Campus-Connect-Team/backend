@@ -1,9 +1,12 @@
 package com.campusconnect.backend.config.web;
 
+import com.campusconnect.backend.util.security.CustomAuthenticationHandler;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.config.Customizer;
+import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.method.configuration.EnableGlobalMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
@@ -36,14 +39,14 @@ public class WebSecurityConfig {
                 .headers((headers) -> headers.frameOptions(HeadersConfigurer.FrameOptionsConfig::disable))
                 .formLogin(Customizer.withDefaults())
                 .authorizeHttpRequests(authorizeRequest -> authorizeRequest
-                        .requestMatchers(("/board/**")).hasAuthority("USER")
+                        .requestMatchers(("/boards/**")).hasAuthority("USER")
                         .anyRequest()
                         .permitAll()
                 )
 
                 .formLogin(customizer -> customizer
-                        .loginPage("/user/login")
-                        .loginProcessingUrl("/user/login")
+                        .loginPage("/users/log-in")
+                        .loginProcessingUrl("/users/log-in")
                         .defaultSuccessUrl("/")
                         .usernameParameter("userNumber")
                         .passwordParameter("password")
@@ -51,7 +54,7 @@ public class WebSecurityConfig {
                 )
 
                 .logout(customizer -> customizer
-                        .logoutUrl("/user/logout")
+                        .logoutUrl("/users/log-out")
                         .logoutSuccessUrl("/")
                         .invalidateHttpSession(true)
                         .deleteCookies("JSESSIONID")
@@ -71,5 +74,15 @@ public class WebSecurityConfig {
         urlBasedCorsConfigurationSource.registerCorsConfiguration("/**", configuration);
 
         return urlBasedCorsConfigurationSource;
+    }
+
+    @Bean
+    CustomAuthenticationHandler customAuthenticationHandler() {
+        return new CustomAuthenticationHandler();
+    }
+
+    @Bean
+    public AuthenticationManager authenticationManager(AuthenticationConfiguration authenticationConfiguration) throws Exception{
+        return authenticationConfiguration.getAuthenticationManager();
     }
 }
