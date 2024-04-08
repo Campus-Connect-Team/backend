@@ -39,6 +39,9 @@ dependencies {
 	implementation 'org.thymeleaf.extras:thymeleaf-extras-springsecurity6'
 	implementation 'org.springframework.cloud:spring-cloud-starter-aws:2.2.6.RELEASE'
 
+	// JWT
+	implementation 'io.jsonwebtoken:jjwt:0.9.1'
+
 	// **Spring Boot 3.0 이상: Hibernate5JakartaModule 등록**
 	implementation 'com.fasterxml.jackson.datatype:jackson-datatype-hibernate5-jakarta'
 

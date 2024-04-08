@@ -1,9 +1,12 @@
 package com.campusconnect.backend.config.web;
 
+import com.campusconnect.backend.util.security.CustomAuthenticationHandler;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.config.Customizer;
+import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.method.configuration.EnableGlobalMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
@@ -12,6 +15,11 @@ import org.springframework.security.config.annotation.web.configurers.HeadersCon
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.web.cors.CorsConfiguration;
+import org.springframework.web.cors.CorsConfigurationSource;
+import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
+
+import java.util.List;
 
 @Configuration
 @EnableGlobalMethodSecurity(prePostEnabled = true)
@@ -31,15 +39,14 @@ public class WebSecurityConfig {
                 .headers((headers) -> headers.frameOptions(HeadersConfigurer.FrameOptionsConfig::disable))
                 .formLogin(Customizer.withDefaults())
                 .authorizeHttpRequests(authorizeRequest -> authorizeRequest
-                        .requestMatchers(("/user/**")).hasAuthority("USER")
-                        .requestMatchers(("/board/**")).hasAuthority("USER")
+                        .requestMatchers(("/boards/**")).hasAuthority("USER")
                         .anyRequest()
                         .permitAll()
                 )
 
                 .formLogin(customizer -> customizer
-                        .loginPage("/login")
-                        .loginProcessingUrl("/login")
+                        .loginPage("/users/log-in")
+                        .loginProcessingUrl("/users/log-in")
                         .defaultSuccessUrl("/")
                         .usernameParameter("userNumber")
                         .passwordParameter("password")
@@ -47,11 +54,35 @@ public class WebSecurityConfig {
                 )
 
                 .logout(customizer -> customizer
-                        .logoutUrl("/logout")
+                        .logoutUrl("/users/log-out")
                         .logoutSuccessUrl("/")
                         .invalidateHttpSession(true)
                         .deleteCookies("JSESSIONID")
                 )
                 .build();
+    }
+
+    @Bean
+    CorsConfigurationSource corsConfiguration() {
+        CorsConfiguration configuration = new CorsConfiguration();
+        configuration.setAllowedOrigins(List.of("http://localhost:3000"));
+        configuration.addAllowedHeader("*");  // "Authorization", "Cache-Control", "Content-Type"
+        configuration.addAllowedMethod("*");  // "GET", "POST", "PUT", "DELETE", "HEAD", "OPTIONS" ...
+        configuration.setAllowCredentials(true);
+
+        UrlBasedCorsConfigurationSource urlBasedCorsConfigurationSource = new UrlBasedCorsConfigurationSource();
+        urlBasedCorsConfigurationSource.registerCorsConfiguration("/**", configuration);
+
+        return urlBasedCorsConfigurationSource;
+    }
+
+    @Bean
+    CustomAuthenticationHandler customAuthenticationHandler() {
+        return new CustomAuthenticationHandler();
+    }
+
+    @Bean
+    public AuthenticationManager authenticationManager(AuthenticationConfiguration authenticationConfiguration) throws Exception{
+        return authenticationConfiguration.getAuthenticationManager();
     }
 }
