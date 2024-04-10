@@ -1,6 +1,5 @@
 package com.campusconnect.backend.basetime;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.EntityListeners;
 import jakarta.persistence.MappedSuperclass;
 import lombok.Getter;
@@ -16,10 +15,8 @@ import java.time.LocalDateTime;
 public abstract class BaseTimeEntity {
 
     @CreatedDate
-    @JsonIgnore
     private LocalDateTime createdDate;
 
     @LastModifiedDate
-    @JsonIgnore
     private LocalDateTime modifiedDate;
 }

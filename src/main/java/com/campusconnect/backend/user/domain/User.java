@@ -2,21 +2,20 @@ package com.campusconnect.backend.user.domain;
 
 import com.campusconnect.backend.basetime.BaseTimeEntity;
 import jakarta.persistence.*;
-import lombok.AccessLevel;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
+import lombok.*;
 
 @Entity
 @Table(name = "users")
 @Getter
 @NoArgsConstructor(access = AccessLevel.PUBLIC)
+@AllArgsConstructor
 public class User extends BaseTimeEntity {
 
     @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "users_id")
     private Long id;
 
-    @Column(name = "name", nullable = false, length = 4)
+    @Column(name = "name", nullable = false, length = 5)
     private String name;
 
     @Column(name = "student_number", nullable = false, unique = true, length = 8)
@@ -38,8 +37,36 @@ public class User extends BaseTimeEntity {
     private String image;
 
     @Column(name = "buyer_manner")
-    private Long buyerManner;
+    private Double buyerManner;
 
     @Column(name = "seller_manner")
-    private Long sellerManner;
+    private Double sellerManner;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "role")
+    private UserRole role;
+
+    @Builder
+    public User(Long id,
+                String name,
+                String studentNumber,
+                String college,
+                String department,
+                String password,
+                String email,
+                String image,
+                UserRole role
+                ) {
+        this.id = id;
+        this.name = name;
+        this.studentNumber = studentNumber;
+        this.college = college;
+        this.department = department;
+        this.password = password;
+        this.email = email;
+        this.image = image;
+        this.sellerManner = 0.0D;
+        this.buyerManner = 0.0D;
+        this.role = UserRole.USER;
+    }
 }
