@@ -39,22 +39,23 @@ public class WebSecurityConfig {
                 .headers((headers) -> headers.frameOptions(HeadersConfigurer.FrameOptionsConfig::disable))
                 .formLogin(Customizer.withDefaults())
                 .authorizeHttpRequests(authorizeRequest -> authorizeRequest
-                        .requestMatchers(("/boards/**")).hasAuthority("USER")
+                        .requestMatchers("/h2-console/**").permitAll()
+                        .requestMatchers("/boards/**").hasRole("USER")
+                        .requestMatchers("/my-page/**").hasRole("USER")
+                        .requestMatchers("/admin/**").hasRole("ADMIN")
                         .anyRequest()
                         .permitAll()
                 )
 
                 .formLogin(customizer -> customizer
-                        .loginPage("/users/log-in")
+                        .loginPage("/users/log-in").permitAll()
                         .loginProcessingUrl("/users/log-in")
                         .defaultSuccessUrl("/")
-                        .usernameParameter("userNumber")
-                        .passwordParameter("password")
-                        .permitAll()
-                )
+                        .usernameParameter("studentNumber")
+                        .passwordParameter("password"))
 
                 .logout(customizer -> customizer
-                        .logoutUrl("/users/log-out")
+                        .logoutUrl("/users/log-out").permitAll()
                         .logoutSuccessUrl("/")
                         .invalidateHttpSession(true)
                         .deleteCookies("JSESSIONID")
