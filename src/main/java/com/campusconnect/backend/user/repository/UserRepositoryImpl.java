@@ -1,6 +1,6 @@
 package com.campusconnect.backend.user.repository;
 
-import com.campusconnect.backend.user.domain.User;
+import com.campusconnect.backend.user.domain.QUser;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import lombok.RequiredArgsConstructor;
 

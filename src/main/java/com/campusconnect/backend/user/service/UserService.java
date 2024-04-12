@@ -1,10 +1,12 @@
 package com.campusconnect.backend.user.service;
 
 import com.amazonaws.services.s3.AmazonS3Client;
+import com.campusconnect.backend.authentication.repository.AuthenticationRepository;
 import com.campusconnect.backend.config.aws.S3Uploader;
 import com.campusconnect.backend.user.domain.User;
 import com.campusconnect.backend.user.domain.UserImageInitializer;
 import com.campusconnect.backend.user.domain.UserRole;
+import com.campusconnect.backend.user.dto.request.EmailAuthenticationRequest;
 import com.campusconnect.backend.user.dto.request.UserSignUpRequest;
 import com.campusconnect.backend.user.repository.UserRepository;
 import com.campusconnect.backend.util.exception.CustomException;
@@ -23,6 +25,7 @@ import org.springframework.transaction.annotation.Transactional;
 @Slf4j
 public class UserService {
 
+    private final AuthenticationRepository authenticationRepository;
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
     private final S3Uploader s3Uploader;
@@ -66,21 +69,44 @@ public class UserService {
         return userRepository.save(user);
     }
 
-    /**
-     * 중복된 이메일인지 체크한다.
-     */
-    private void checkDuplicationEmail(String email) {
+    /** 중복된 이메일인지 체크한다. */
+    public void checkDuplicationEmail(String email) {
         if (userRepository.isEmailPrefixDuplicated(email)) {
             throw new CustomException(ErrorCode.ALREADY_EXISTS_EMAIL);
         }
     }
 
-    /**
-     * 중복된 사용자가 존재하는지 체크한다.
-     */
-    private void checkDuplicationUser(String studentNumber) {
+    /** 중복된 사용자가 존재하는지 체크한다. */
+    public void checkDuplicationUser(String studentNumber) {
         if (userRepository.findByStudentNumber(studentNumber).isPresent()) {
             throw new CustomException(ErrorCode.ALREADY_EXISTS_STUDENT_NUMBER);
         }
     }
+
+    /** 중복된 학번인지 체크한다. */
+    public void validateDuplicateStudentNumber(String userStudentNumberRequest) {
+        if (userRepository.findByStudentNumber(userStudentNumberRequest).isPresent()) {
+            throw new CustomException(ErrorCode.ALREADY_EXISTS_STUDENT_NUMBER);
+        }
+    }
+
+    /** 중복된 이메일인지 체크한다. */
+    public void validateDuplicateEmail(String email) {
+        if (userRepository.isEmailPrefixDuplicated(email)) {
+            throw new CustomException(ErrorCode.ALREADY_EXISTS_EMAIL);
+        }
+    }
+
+    /** 인증 코드 일치 검증 */
+    public void validateAuthenticationCode(EmailAuthenticationRequest emailAuthenticationRequest) {
+        String email = emailAuthenticationRequest.getEmail();
+        String authenticationNumber = emailAuthenticationRequest.getAuthenticationNumber();
+
+        if (!authenticationRepository.isCorrectAuthenticationNumber(email, authenticationNumber)) {
+            throw new CustomException(ErrorCode.INVALID_AUTHENTICATION_CODE);
+        } else {
+            log.info("인증번호가 일치합니다.");
+        }
+    }
+
 }
