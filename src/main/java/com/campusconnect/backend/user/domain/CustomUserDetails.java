@@ -1,32 +1,36 @@
-package com.campusconnect.backend.util.security;
+package com.campusconnect.backend.user.domain;
 
-import com.campusconnect.backend.user.domain.User;
+import lombok.Getter;
+import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 
+import java.util.ArrayList;
 import java.util.Collection;
 
+@Getter
+@RequiredArgsConstructor
 public class CustomUserDetails implements UserDetails {
 
-    private User user;
-
-    public CustomUserDetails(User user) {
-        this.user = user;
-    }
+    private final User user;
 
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
-        return null;
+
+        Collection<GrantedAuthority> collection = new ArrayList<>();
+        collection.add((GrantedAuthority) () -> user.getRole().name());
+
+        return collection;
     }
 
     @Override
     public String getPassword() {
-        return null;
+        return user.getPassword();
     }
 
     @Override
     public String getUsername() {
-        return null;
+        return user.getStudentNumber();
     }
 
     @Override
@@ -49,4 +53,3 @@ public class CustomUserDetails implements UserDetails {
         return false;
     }
 }
-

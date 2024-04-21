@@ -1,6 +1,7 @@
 package com.campusconnect.backend.user.repository;
 
 import com.campusconnect.backend.user.domain.QUser;
+import com.campusconnect.backend.user.domain.User;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import lombok.RequiredArgsConstructor;
 
@@ -18,5 +19,14 @@ public class UserRepositoryImpl implements UserRepositoryCustom {
                 .from(user)
                 .where(user.email.substring(0, user.email.indexOf("@")).eq(email))
                 .fetchFirst() != null;
+    }
+
+    @Override
+    public User findByEncodedPassword(String studentNumber) {
+        return queryFactory
+                .select(user)
+                .from(user)
+                .where(user.studentNumber.eq(studentNumber))
+                .fetchOne();
     }
 }

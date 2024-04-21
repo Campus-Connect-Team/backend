@@ -22,6 +22,7 @@ public class AuthenticationRepositoryImpl implements AuthenticationRepositoryCus
                                 JPAExpressions
                                         .select(authentication.createdDate.max())
                                         .from(authentication)
+                                        .where(authentication.email.substring(0, authentication.email.indexOf("@")).eq(email))
                         )
                 )
                 .fetchFirst() != null;

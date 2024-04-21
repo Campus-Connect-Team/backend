@@ -12,8 +12,6 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.annotation.Rollback;
 import org.springframework.test.context.ActiveProfiles;
 
-import static org.junit.jupiter.api.Assertions.*;
-
 @SpringBootTest
 @ActiveProfiles({"test2", "aws"})
 class UserControllerTest {
@@ -43,7 +41,7 @@ class UserControllerTest {
         request.setDepartment("정보통신공학과");
 
         // When
-        User savedUser = userService.createUser(request);
+        User savedUser = userService.createUser(request, multipartFile);
 
         // Then
         Assertions.assertThat("https://campus-connect-backend.s3.ap-northeast-2.amazonaws.com/BasicProfileImage.png").isEqualTo(savedUser.getImage());
