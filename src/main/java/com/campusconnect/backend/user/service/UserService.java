@@ -7,17 +7,24 @@ import com.campusconnect.backend.user.domain.User;
 import com.campusconnect.backend.user.domain.UserImageInitializer;
 import com.campusconnect.backend.user.domain.UserRole;
 import com.campusconnect.backend.user.dto.request.EmailAuthenticationRequest;
+import com.campusconnect.backend.user.dto.request.UserLoginRequest;
 import com.campusconnect.backend.user.dto.request.UserSignUpRequest;
+import com.campusconnect.backend.user.dto.response.UserLoginResponse;
 import com.campusconnect.backend.user.repository.UserRepository;
 import com.campusconnect.backend.util.exception.CustomException;
 import com.campusconnect.backend.util.exception.ErrorCode;
+import com.campusconnect.backend.util.jwt.JwtProvider;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
+
+import java.io.IOException;
 
 @Service
 @Transactional(readOnly = true)
@@ -28,14 +35,20 @@ public class UserService {
     private final AuthenticationRepository authenticationRepository;
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
+    private final JwtProvider jwtProvider;
     private final S3Uploader s3Uploader;
     private final AmazonS3Client amazonS3Client;
 
     @Value("${cloud.aws.s3.bucket")
     private String bucket;
 
+    @Value("${jwt.secret-key}")
+    private String secretKey;
+
+    private Long expiredMs = 1000 * 60 * 60L;
+
     @Transactional
-    public User createUser(UserSignUpRequest userSignUpRequest) {
+    public User createUser(UserSignUpRequest userSignUpRequest, MultipartFile multipartFile) throws IOException {
         // 학번, 이메일 중복 검증
         checkDuplicationUser(userSignUpRequest.getStudentNumber());
         checkDuplicationEmail(userSignUpRequest.getEmail());
@@ -43,20 +56,22 @@ public class UserService {
         BCryptPasswordEncoder bCryptPasswordEncoder = new BCryptPasswordEncoder();
 
         String image = userSignUpRequest.getImage();
+        log.info("image = {}", image);
+        if (multipartFile != null) {
+            image = s3Uploader.upload(multipartFile, "static");
+        } else {
+            image = UserImageInitializer.getDefaultImageUrl();
+        }
+
         String name = userSignUpRequest.getName();
         String studentNumber = userSignUpRequest.getStudentNumber();
         String email = userSignUpRequest.getEmail() + "@sungkyul.ac.kr";
         String password = passwordEncoder.encode(userSignUpRequest.getPassword());
-        String college = userSignUpRequest.getCollege();;
+        String college = userSignUpRequest.getCollege();
         String department = userSignUpRequest.getDepartment();
 
-        //  가입 중에 프로필 이미지를 설정하지 않았다면
-        if (userSignUpRequest.getImage().isEmpty()) {
-            userSignUpRequest.setImage(UserImageInitializer.getDefaultImageUrl());
-        }
-
         User user = User.builder()
-                .image(userSignUpRequest.getImage())
+                .image(image)
                 .name(name)
                 .studentNumber(studentNumber)
                 .email(email)
@@ -66,6 +81,8 @@ public class UserService {
                 .role(UserRole.USER)
                 .build();
 
+        authenticationRepository.deleteAllByEmail(email);
+        log.info(image);
         return userRepository.save(user);
     }
 
@@ -78,7 +95,7 @@ public class UserService {
 
     /** 중복된 사용자가 존재하는지 체크한다. */
     public void checkDuplicationUser(String studentNumber) {
-        if (userRepository.findByStudentNumber(studentNumber).isPresent()) {
+        if (userRepository. findByStudentNumber(studentNumber).isPresent()) {
             throw new CustomException(ErrorCode.ALREADY_EXISTS_STUDENT_NUMBER);
         }
     }
@@ -109,4 +126,23 @@ public class UserService {
         }
     }
 
+    /** 로그인 처리 */
+    public UserLoginResponse userLogin(UserLoginRequest userLoginRequest) {
+
+        User findUser = userRepository.findByStudentNumber(userLoginRequest.getStudentNumber())
+                .orElseThrow(() -> new CustomException(ErrorCode.FAIL_LOGIN));
+
+        String studentNumber = userLoginRequest.getStudentNumber();
+        if (!findUser.getStudentNumber().equals(studentNumber)) {
+            throw new CustomException(ErrorCode.FAIL_LOGIN);
+        }
+
+        String password = userLoginRequest.getPassword();
+        if (!passwordEncoder.matches(password, findUser.getPassword())) {
+            throw new CustomException(ErrorCode.FAIL_LOGIN);
+        }
+
+        String token = jwtProvider.createToken(studentNumber, secretKey, expiredMs);
+        return new UserLoginResponse(findUser.getStudentNumber(), token, expiredMs);
+    }
 }

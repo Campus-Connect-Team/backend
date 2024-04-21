@@ -10,7 +10,7 @@ import org.springframework.web.bind.annotation.RestController;
 @RequiredArgsConstructor
 public class HomeController {
 
-    @GetMapping("/home")
+    @GetMapping("/")
     public String helloApplication() {
         return "Hello Spring World";
     }

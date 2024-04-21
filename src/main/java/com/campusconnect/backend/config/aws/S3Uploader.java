@@ -24,27 +24,24 @@ public class S3Uploader {
     @Value("${cloud.aws.s3.bucket}")
     private String bucket;
 
-    // MultiPartFile을 전달받아 File로 변환 후 S3에 업로드한다.
+//     MultiPartFile을 전달받아 File로 변환 후 S3에 업로드한다.
     public String upload(MultipartFile multipartFile, String dirName) throws IOException {
 
         // dirName의 디렉토리가 S3 Bucket 내부에 생성된다.
         File uploadFile = (File) convert(multipartFile)
-                .orElseThrow(() -> new IllegalArgumentException("MultipartFile -> File 전환 실패"));
+                .orElseThrow(() -> new IllegalArgumentException("MultipartFile -> File 전환에 실패했습니다."));
         return upload((MultipartFile) uploadFile, dirName);
     }
 
     private String upload(File uploadFile, String dirName) {
-        String fileName = dirName + "/" + uploadFile.getName();
-        String uploadImageUrl = putS3(uploadFile, fileName);
-
-        removeNewFile(uploadFile);  // convert() 메서드로 로컬에 생성된 File 삭제(MultiPartFile)
-        return uploadImageUrl;  // 업로드된 파일의 S3 URL 반환
+        String fileName = dirName + "/" + uploadFile.getName();   // S3에 저장된 파일 이름
+        String uploadImageUrl = putS3(uploadFile, fileName); // s3로 업로드
+        removeNewFile(uploadFile);
+        return uploadImageUrl;
     }
 
     private String putS3(File uploadFile, String fileName) {
-        amazonS3Client.putObject(
-                new PutObjectRequest(bucket, fileName, uploadFile).withCannedAcl(CannedAccessControlList.PublicRead) // // PublicRead 권한으로 업로드 완료
-        );
+        amazonS3Client.putObject(new PutObjectRequest(bucket, fileName, uploadFile).withCannedAcl(CannedAccessControlList.PublicRead));       // PublicRead 권한으로 업로드 완료
         return amazonS3Client.getUrl(bucket, fileName).toString();
     }
 
@@ -56,11 +53,11 @@ public class S3Uploader {
         }
     }
 
-    private Optional<Object> convert(MultipartFile file) throws IOException {
-        File convertFile = new File(file.getOriginalFilename());  //  업로드한 파일의 이름
+    private Optional<File> convert(MultipartFile multipartFile) throws IOException {
+        File convertFile = new File(multipartFile.getOriginalFilename());  //  업로드한 파일의 이름
         if (convertFile.createNewFile()) {
             try (FileOutputStream fos = new FileOutputStream(convertFile)) {
-                fos.write(file.getBytes());
+                fos.write(multipartFile.getBytes());
             }
             return Optional.of(convertFile);
         }
