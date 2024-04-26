@@ -119,7 +119,7 @@ public class UserService {
     }
 
     /** 로그인 처리 */
-    public UserLoginResponse userLogin(UserLoginRequest userLoginRequest) {
+    public UserLoginResponse login(UserLoginRequest userLoginRequest) {
 
         User findUser = userRepository.findByStudentNumber(userLoginRequest.getStudentNumber())
                 .orElseThrow(() -> new CustomException(ErrorCode.FAIL_LOGIN));

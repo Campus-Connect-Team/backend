@@ -116,11 +116,6 @@ public class Board extends BaseTimeEntity {
                 .collect(Collectors.toList());
     }
 
-    /** 특정 게시글이 삭제되었다면 boardID를 최신화한다. */
-    public void synchronizeBoardId() {
-        this.id = id - 1;
-    }
-
     /** 관심 수 증가 */
     public void increaseFavoriteCount() {
         this.favoriteCount++;

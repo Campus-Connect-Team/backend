@@ -1,12 +1,11 @@
 package com.campusconnect.backend.board.dto.response;
 
-import com.campusconnect.backend.board.domain.BoardImage;
 import com.campusconnect.backend.board.domain.TradeStatus;
 import lombok.Builder;
 import lombok.Data;
 
+import java.time.LocalDateTime;
 import java.util.List;
-import java.util.stream.Collectors;
 
 @Data
 public class BoardDetailResponse {
@@ -14,6 +13,7 @@ public class BoardDetailResponse {
     private Long boardId;
     private String department;
     private String name;
+    private String createDate;
     private Double sellerManner;
     private List<String> boardImages;
     private String title;
@@ -26,6 +26,7 @@ public class BoardDetailResponse {
     public BoardDetailResponse(Long boardId,
                                String department,
                                String name,
+                               String createDate,
                                Double sellerManner,
                                List<String> boardImages,
                                String title,
@@ -36,6 +37,7 @@ public class BoardDetailResponse {
         this.boardId = boardId;
         this.department = department;
         this.name = name;
+        this.createDate = createDate;
         this.sellerManner = sellerManner;
         this.boardImages = boardImages;
         this.title = title;

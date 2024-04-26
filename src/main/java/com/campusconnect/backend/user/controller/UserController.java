@@ -54,9 +54,9 @@ public class UserController {
     /** 로그인 처리 */
     @PostMapping("/users/log-in")
     public ResponseEntity<UserLoginResponse> login(@RequestBody @Valid UserLoginRequest userLoginRequest) {
-        userService.userLogin(userLoginRequest);
+        userService.login(userLoginRequest);
         return ResponseEntity.status(ErrorCode.SUCCESS_LOGIN.getHttpStatus().value())
-                .body(userService.userLogin(userLoginRequest));
+                .body(userService.login(userLoginRequest));
     }
 
     @GetMapping("/users/sign-up/studentNumber-duplicate-validation")
