@@ -4,12 +4,15 @@ import com.campusconnect.backend.board.domain.TradeStatus;
 import lombok.Builder;
 import lombok.Data;
 
+import java.time.LocalDateTime;
+
 @Data
 public class BoardListResponse {
 
     private Long boardId;
     private String department;
     private String name;
+    private String createDate;
     private String userProfileImage;
     private String representativeImage;
     private String title;
@@ -21,6 +24,7 @@ public class BoardListResponse {
     public BoardListResponse(Long boardId,
                              String department,
                              String name,
+                             String createDate,
                              String userProfileImage,
                              String representativeImage,
                              String title,
@@ -30,6 +34,7 @@ public class BoardListResponse {
         this.boardId = boardId;
         this.department = department;
         this.name = name;
+        this.createDate = createDate;
         this.userProfileImage = userProfileImage;
         this.representativeImage = representativeImage;
         this.title = title;

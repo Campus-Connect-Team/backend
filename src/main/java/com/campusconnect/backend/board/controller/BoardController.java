@@ -13,6 +13,9 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -46,11 +49,18 @@ public class BoardController {
                 .body(boardService.getBoardById(boardId));
     }
 
-    /** 게시글 전체(리스트) 조회 */
+//    /** 게시글 전체(리스트) 조회 */
+//    @GetMapping("/boards")
+//    public ResponseEntity<List<BoardListResponse>> getBoardList() {
+//        return ResponseEntity.status(HttpStatus.OK.value())
+//                .body(boardService.getBoardList());
+//    }
+
+    /** 페이징 처리 : 게시글 조회 */
     @GetMapping("/boards")
-    public ResponseEntity<List<BoardListResponse>> getBoardList() {
-        return ResponseEntity.status(HttpStatus.OK.value())
-                .body(boardService.getBoardList());
+    public ResponseEntity<List<BoardListResponse>> getBoardListWithPaging(@PageableDefault(size = 9, sort = "createdDate", direction = Sort.Direction.DESC) Pageable pageable) {
+        return ResponseEntity.status(HttpStatus.OK)
+                .body(boardService.getBoardListWithPaging(pageable));
     }
 
     /** 게시글 수정 */

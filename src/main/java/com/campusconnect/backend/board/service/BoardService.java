@@ -16,6 +16,7 @@ import com.campusconnect.backend.util.exception.CustomException;
 import com.campusconnect.backend.util.exception.ErrorCode;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
@@ -96,6 +97,7 @@ public class BoardService {
                 .boardId(findBoard.getId())
                 .department(findBoard.getUser().getDepartment())
                 .name(findBoard.getUser().getName())
+                .createDate(findBoard.getCreatedDate())
                 .sellerManner(findBoard.getUser().getSellerManner())
                 .boardImages(findBoard.getBoardImages())
                 .title(findBoard.getTitle())
@@ -115,6 +117,24 @@ public class BoardService {
                         .boardId(board.getId())
                         .department(board.getUser().getDepartment())
                         .name(board.getUser().getName())
+                        .userProfileImage(board.getUser().getImage())
+                        .representativeImage(board.getBoardImages().get(0))
+                        .title(board.getTitle())
+                        .favoriteCount(board.getFavoriteCount())
+                        .chatCount(board.getChatCount())
+                        .tradeStatus(board.getTradeStatus())
+                        .build())
+                .collect(Collectors.toList());
+    }
+
+    /** 페이징 처리 : 전체 게시글 조회 */
+    public List<BoardListResponse> getBoardListWithPaging(Pageable pageable) {
+        return boardRepository.findAll(pageable).stream()
+                .map(board -> BoardListResponse.builder()
+                        .boardId(board.getId())
+                        .department(board.getUser().getDepartment())
+                        .name(board.getUser().getName())
+                        .createDate(board.getCreatedDate())
                         .userProfileImage(board.getUser().getImage())
                         .representativeImage(board.getBoardImages().get(0))
                         .title(board.getTitle())
@@ -149,7 +169,6 @@ public class BoardService {
         String tradeStatus = boardUpdateRequest.getTradeStatus();
         findBoard.changeTradeStatus(tradeStatus);
     }
-
 //    private void updateImages(Board board,
 //                              List<Long> deletedImageIds,
 //                              List<MultipartFile> multipartFiles) throws IOException {
@@ -183,6 +202,7 @@ public class BoardService {
 //
 //
 //        // 기존 이미지 업데이트
+
 //        board.updateBoardImages(updatedImages);
 //    }
 
@@ -211,4 +231,5 @@ public class BoardService {
             s3Uploader.deleteToBoardImage(imageName);
         }
     }
+
 }
