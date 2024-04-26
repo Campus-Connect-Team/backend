@@ -2,6 +2,7 @@ package com.campusconnect.backend.user.controller;
 
 import com.campusconnect.backend.config.aws.S3Uploader;
 import com.campusconnect.backend.user.domain.User;
+import com.campusconnect.backend.user.domain.UserImageInitializer;
 import com.campusconnect.backend.user.dto.request.*;
 import com.campusconnect.backend.user.dto.response.UserLoginResponse;
 import com.campusconnect.backend.user.service.UserService;
@@ -28,10 +29,19 @@ public class UserController {
     private final EmailService emailService;
     private final S3Uploader s3Uploader;
 
-    @PostMapping( value = "/users/sign-up", consumes = {MediaType.MULTIPART_FORM_DATA_VALUE})
+    @PostMapping(value = "/users/sign-up", consumes = {MediaType.MULTIPART_FORM_DATA_VALUE})
     public User createUser(HttpServletRequest request,
                            @RequestPart(value = "request") @Valid UserSignUpRequest userSignUpRequest,
                            @RequestPart(value = "image", required = false) MultipartFile multipartFile) throws IOException {
+        // 이미지 업로드 및 URL 생성
+        String imageUrl;
+        if (multipartFile != null) {
+            imageUrl = s3Uploader.upload(multipartFile, "user");
+        } else {
+            imageUrl = UserImageInitializer.getDefaultImageUrl();
+        }
+        userSignUpRequest.setImage(imageUrl);
+
         return userService.createUser(userSignUpRequest, multipartFile);
     }
 
