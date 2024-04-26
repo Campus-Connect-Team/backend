@@ -1,6 +1,7 @@
 package com.campusconnect.backend.config.web;
 
 import com.campusconnect.backend.user.service.UserService;
+import com.campusconnect.backend.util.jwt.JwtProvider;
 import com.campusconnect.backend.util.security.CustomAuthenticationHandler;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
@@ -28,6 +29,8 @@ import java.util.List;
 public class WebSecurityConfig {
 
     private final UserService userService;
+    private final JwtProvider jwtProvider;
+    private final JwtFilter jwtFilter;
 
     @Bean
     protected SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
@@ -40,7 +43,7 @@ public class WebSecurityConfig {
                                 .requestMatchers(
                                         "/",
                                         "/users/log-in",
-                                        "/users/sign-up",
+                                        "/users/sign-up/**",
                                         "/swagger-ui/index.html",
                                         "/v3/api-docs/**",
                                         "/h2-console/**",
@@ -71,7 +74,7 @@ public class WebSecurityConfig {
                         .invalidateHttpSession(true)
                         .deleteCookies("JSESSIONID")
                 )
-                .addFilterBefore(new JwtFilter(userService), UsernamePasswordAuthenticationFilter.class)
+                .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class)
                 .build();
     }
 

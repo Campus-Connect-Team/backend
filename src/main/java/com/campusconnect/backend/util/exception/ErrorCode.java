@@ -8,7 +8,7 @@ import org.springframework.http.HttpStatus;
 @AllArgsConstructor
 public enum ErrorCode {
 
-    // 회원가입
+    // 회원 도메인 : 회원 가입 (사용자 인증 처리 관련 포함)
     ALREADY_EXISTS_STUDENT_NUMBER(HttpStatus.BAD_REQUEST, "USER-001", "이미 존재하는 학번입니다."),
     ALREADY_EXISTS_EMAIL(HttpStatus.BAD_REQUEST, "USER-002", "이미 존재하는 이메일입니다."),
     INVALID_AUTHENTICATION_CODE(HttpStatus.BAD_REQUEST, "USER-003", "인증번호가 일치하지 않습니다."),
@@ -16,19 +16,44 @@ public enum ErrorCode {
     FAILED_MESSAGE_SEND(HttpStatus.INTERNAL_SERVER_ERROR, "USER-005", "인증 코드 메일 전송에 실패했습니다."),
     NOT_FOUND_PROFILE_IMAGE(HttpStatus.BAD_REQUEST, "USER-006", "프로필 사진을 찾을 수 없습니다."),
 
-    // 회원가입 - 처리 가능한 요청에 대한 Response Status Code
+    UNAUTHORIZED_CLIENT(HttpStatus.BAD_REQUEST,"AUTHORIZATION-001", "접근 토큰이 없습니다."),
+    FORBIDDEN_CLIENT(HttpStatus.FORBIDDEN, "AUTHORIZATION-002","접근 권한이 없습니다."),
+    EXPIRED_TOKEN(HttpStatus.UNAUTHORIZED, "AUTHORIZATION-003","만료된 토큰입니다."),
+    JWT_DECODE_FAIL(HttpStatus.UNAUTHORIZED, "AUTHORIZATION-004","올바른 토큰이 필요합니다."),
+    JWT_SIGNATURE_FAIL(HttpStatus.UNAUTHORIZED, "AUTHORIZATION-005","올바른 토큰이 필요합니다."),
+
+
+    // 회원 도메인 : 회원가입 - 처리 가능한 요청에 대한 Response Status Code
     AVAILABLE_STUDENT_NUMBER(HttpStatus.OK, "USER-006", "가입 가능한 학번입니다."),
     AVAILABLE_EMAIL(HttpStatus.OK, "USER-007", "가입 가능한 이메일입니다."),
     MATCH_AUTHENTICATION_CODE(HttpStatus.OK, "USER-008", "인증코드가 일치합니다."),
 
 
-    // 로그인, 로그아웃
+    // 회원 도메인 : 로그인, 로그아웃
     FAIL_LOGIN(HttpStatus.UNAUTHORIZED, "USER-009", "로그인에 실패했습니다. 학번 또는 비밀번호가 정확한지 확인해 주세요."),
     NOT_FOUND_USER(HttpStatus.NOT_FOUND, "USER-010",  "해당 학번으로 회원 정보가 존재하지 않습니다."),
     NOT_PUBLISH_TOKEN(HttpStatus.BAD_REQUEST, "USER-011", "토큰이 발행되지 않았습니다."),
 
-    // 로그인, 로그아웃  - 처리 가능한 요청에 대한 Response Status Code
+
+    // 회원 도메인 : 로그인, 로그아웃  - 처리 가능한 요청에 대한 Response Status Code
     SUCCESS_LOGIN(HttpStatus.OK, "USER-011", "로그인 처리되었습니다."),
+
+
+
+    // 게시판 도메인 : 게시글 기본 CRUD, 그외 세부 기능들
+    NOT_FOUND_BOARD(HttpStatus.BAD_REQUEST, "BOARD-001", "해당 판매 게시글이 존재하지 않습니다."),
+    NOT_FOUND_BOARD_IMAGES(HttpStatus.BAD_REQUEST, "BOARD-002", "판매 게시글에 대한 판매 사진이 업로드되지 않았습니다."),
+    EXCEEDED_LIMIT_BOARD_IMAGES(HttpStatus.BAD_REQUEST, "BOARD-003", "판매 게시글 사진은 최대 10장까지만 업로드할 수 있습니다."),
+    CANNOT_UPDATE_BOARD(HttpStatus.BAD_REQUEST, "BOARD-004", "거래완료로 처리된 판매 게시글은 수정할 수 없습니다."),
+    CANNOT_DELETE_BOARD(HttpStatus.BAD_REQUEST, "BOARD-005", "거래완료로 처리된 판매 게시글은 삭제할 수 없습니다."),
+
+
+    // 게시판 도메인 : 게시글 기본 CRUD, 그외 세부 기능들 - 처리 가능한 요청에 대한 Response Status Code
+    SUCCESS_BOARD_CREATION(HttpStatus.OK, "BOARD-006", "판매 게시글 작성이 완료되었습니다."),
+    SUCCESS_BOARD_UPDATE(HttpStatus.OK, "BOARD-007", "판매 게시글 수정이 완료되었습니다."),
+    SUCCESS_BOARD_DELETE(HttpStatus.OK, "BOARD-008", "판매 게시글 수정이 완료되었습니다."),
+
+
 
 
     /**

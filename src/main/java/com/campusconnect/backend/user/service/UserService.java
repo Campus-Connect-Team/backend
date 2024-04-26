@@ -17,7 +17,6 @@ import com.campusconnect.backend.util.jwt.JwtProvider;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -45,7 +44,7 @@ public class UserService {
     @Value("${jwt.secret-key}")
     private String secretKey;
 
-    private Long expiredMs = 1000 * 60 * 60L;
+    private Long expiredMs = 1000 * 60 * 10L;
 
     @Transactional
     public User createUser(UserSignUpRequest userSignUpRequest, MultipartFile multipartFile) throws IOException {
@@ -54,14 +53,7 @@ public class UserService {
         checkDuplicationEmail(userSignUpRequest.getEmail());
 
         BCryptPasswordEncoder bCryptPasswordEncoder = new BCryptPasswordEncoder();
-
         String image = userSignUpRequest.getImage();
-        log.info("image = {}", image);
-        if (multipartFile != null) {
-            image = s3Uploader.upload(multipartFile, "static");
-        } else {
-            image = UserImageInitializer.getDefaultImageUrl();
-        }
 
         String name = userSignUpRequest.getName();
         String studentNumber = userSignUpRequest.getStudentNumber();
