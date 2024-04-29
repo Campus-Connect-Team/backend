@@ -46,12 +46,17 @@ public enum ErrorCode {
     EXCEEDED_LIMIT_BOARD_IMAGES(HttpStatus.BAD_REQUEST, "BOARD-003", "판매 게시글 사진은 최대 10장까지만 업로드할 수 있습니다."),
     CANNOT_UPDATE_BOARD(HttpStatus.BAD_REQUEST, "BOARD-004", "거래완료로 처리된 판매 게시글은 수정할 수 없습니다."),
     CANNOT_DELETE_BOARD(HttpStatus.BAD_REQUEST, "BOARD-005", "거래완료로 처리된 판매 게시글은 삭제할 수 없습니다."),
+    CANNOT_INCREASE_BOARD_FAVORITE_COUNT(HttpStatus.BAD_REQUEST, "BOARD-006", "이미 관심 상품(게시글)로 등록하셨습니다."),
+    LIMIT_EXCEEDED_BY_ZERO_DECREASE_FAVORITE_COUNT(HttpStatus.BAD_REQUEST, "BOARD-007", "관심 수는 0 미만으로 감소할 수 없습니다."),
 
 
     // 게시판 도메인 : 게시글 기본 CRUD, 그외 세부 기능들 - 처리 가능한 요청에 대한 Response Status Code
-    SUCCESS_BOARD_CREATION(HttpStatus.OK, "BOARD-006", "판매 게시글 작성이 완료되었습니다."),
-    SUCCESS_BOARD_UPDATE(HttpStatus.OK, "BOARD-007", "판매 게시글 수정이 완료되었습니다."),
-    SUCCESS_BOARD_DELETE(HttpStatus.OK, "BOARD-008", "판매 게시글 수정이 완료되었습니다."),
+    NOT_EXISTS_SEARCH_BOARD_RESULTS(HttpStatus.OK, "BOARD-008", "게시글 검색 결과가 존재하지 않습니다."),
+    SUCCESS_BOARD_CREATION(HttpStatus.OK, "BOARD-009", "판매 게시글 작성이 완료되었습니다."),
+    SUCCESS_BOARD_UPDATE(HttpStatus.OK, "BOARD-010", "판매 게시글 수정이 완료되었습니다."),
+    SUCCESS_BOARD_DELETE(HttpStatus.OK, "BOARD-011", "판매 게시글 삭제가 완료되었습니다."),
+    SUCCESS_REGISTER_FAVORITE_BOARD(HttpStatus.OK, "BOARD-012", "관심 게시글(상품)로 등록되었습니다."),
+    SUCCESS_CANCEL_FAVORITE_BOARD(HttpStatus.OK, "BOARD-013", "관심 게시글(상품)에서 해제되었습니다."),
 
 
 

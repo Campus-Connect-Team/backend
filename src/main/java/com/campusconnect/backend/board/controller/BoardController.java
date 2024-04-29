@@ -1,13 +1,12 @@
 package com.campusconnect.backend.board.controller;
 
 import com.campusconnect.backend.board.dto.request.BoardCreateRequest;
+import com.campusconnect.backend.board.dto.request.BoardFavoriteRequest;
 import com.campusconnect.backend.board.dto.request.BoardUpdateRequest;
-import com.campusconnect.backend.board.dto.response.BoardCreateResponse;
-import com.campusconnect.backend.board.dto.response.BoardDetailResponse;
-import com.campusconnect.backend.board.dto.response.BoardListResponse;
-import com.campusconnect.backend.board.dto.response.BoardUpdateResponse;
+import com.campusconnect.backend.board.dto.response.*;
 import com.campusconnect.backend.board.service.BoardService;
 import com.campusconnect.backend.config.aws.S3Uploader;
+import com.campusconnect.backend.util.exception.CustomException;
 import com.campusconnect.backend.util.exception.ErrorCode;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
@@ -68,10 +67,13 @@ public class BoardController {
     public ResponseEntity<List<BoardListResponse>> searchBoardWithSearchCond(@RequestParam(required = false) String department,
                                                                              @RequestParam(required = false) String title,
                                                                              @PageableDefault(size = 9, sort = "createdDate", direction = Sort.Direction.DESC) Pageable pageable) {
+
+        if ((boardService.searchBoardWithSearchCond(department, title, pageable).isEmpty())) {
+            throw new CustomException(ErrorCode.NOT_EXISTS_SEARCH_BOARD_RESULTS);
+        }
         return ResponseEntity.status(HttpStatus.OK)
                 .body(boardService.searchBoardWithSearchCond(department, title, pageable));
     }
-
 
     /** 게시글 수정 */
     @PatchMapping(value = "/boards/{boardId}", consumes = {MediaType.MULTIPART_FORM_DATA_VALUE})
@@ -84,11 +86,24 @@ public class BoardController {
                 .body(new BoardUpdateResponse(boardId, ErrorCode.SUCCESS_BOARD_UPDATE));
     }
 
+    /** 관심 상품(게시글)으로 등록 */
+    @PatchMapping("/boards/{boardId}/favorite/register")
+    public ResponseEntity<BoardFavoriteResponse> registerToFavoriteBoard(@PathVariable Long boardId, @RequestBody BoardFavoriteRequest boardFavoriteRequest) {
+        return ResponseEntity.status(HttpStatus.OK)
+                .body(boardService.registerToFavoriteBoard(boardId, boardFavoriteRequest));
+    }
+
+    /** 관심 상품(게시글) 등록 취소 */
+    @PatchMapping("/boards/{boardId}/favorite/cancel")
+    public ResponseEntity<BoardFavoriteResponse> cancelToFavoriteBoard(@PathVariable Long boardId, @RequestBody BoardFavoriteRequest boardFavoriteRequest) {
+        return ResponseEntity.status(HttpStatus.OK)
+                .body(boardService.cancelToFavoriteBoard(boardId, boardFavoriteRequest));
+    }
+
     /** 게시글 삭제 */
     @DeleteMapping("/boards/{boardId}")
-    public ResponseEntity<ErrorCode> deleteBoard(@PathVariable Long boardId) {
-        boardService.deleteBoard(boardId);
+    public ResponseEntity<BoardDeleteResponse> deleteBoard(@PathVariable Long boardId) {
         return ResponseEntity.status(HttpStatus.OK.value())
-                .body(ErrorCode.SUCCESS_BOARD_DELETE);
+                .body(boardService.deleteBoard(boardId));
     }
 }

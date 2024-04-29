@@ -1,6 +1,7 @@
 package com.campusconnect.backend.board.repository;
 
 import com.campusconnect.backend.board.domain.Board;
+import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Pageable;
 
 import java.util.List;

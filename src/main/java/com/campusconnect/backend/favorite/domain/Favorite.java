@@ -4,6 +4,7 @@ import com.campusconnect.backend.board.domain.Board;
 import com.campusconnect.backend.user.domain.User;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
+import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
@@ -24,4 +25,10 @@ public class Favorite {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "board_id")
     private Board board;
+
+    @Builder
+    public Favorite(User user, Board board) {
+        this.user = user;
+        this.board = board;
+    }
 }
