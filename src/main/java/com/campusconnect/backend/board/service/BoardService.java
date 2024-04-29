@@ -3,13 +3,14 @@ package com.campusconnect.backend.board.service;
 import com.campusconnect.backend.board.domain.Board;
 import com.campusconnect.backend.board.domain.BoardImage;
 import com.campusconnect.backend.board.dto.request.BoardCreateRequest;
+import com.campusconnect.backend.board.dto.request.BoardFavoriteRequest;
 import com.campusconnect.backend.board.dto.request.BoardUpdateRequest;
-import com.campusconnect.backend.board.dto.response.BoardCreateResponse;
-import com.campusconnect.backend.board.dto.response.BoardDetailResponse;
-import com.campusconnect.backend.board.dto.response.BoardListResponse;
+import com.campusconnect.backend.board.dto.response.*;
 import com.campusconnect.backend.board.repository.BoardImageRepository;
 import com.campusconnect.backend.board.repository.BoardRepository;
 import com.campusconnect.backend.config.aws.S3Uploader;
+import com.campusconnect.backend.favorite.domain.Favorite;
+import com.campusconnect.backend.favorite.service.FavoriteService;
 import com.campusconnect.backend.user.domain.User;
 import com.campusconnect.backend.user.repository.UserRepository;
 import com.campusconnect.backend.util.exception.CustomException;
@@ -35,6 +36,7 @@ public class BoardService {
     private final UserRepository userRepository;
     private final BoardRepository boardRepository;
     private final BoardImageRepository boardImageRepository;
+    private final FavoriteService favoriteService;
     private final S3Uploader s3Uploader;
 
     /**
@@ -223,9 +225,42 @@ public class BoardService {
 
 //    }
 
+    /** 관심 상품으로 등록 */
+    @Transactional
+    public BoardFavoriteResponse registerToFavoriteBoard(Long boardId, BoardFavoriteRequest boardFavoriteRequest) {
+        Favorite savedFavorite = favoriteService.saveFavorite(boardId, boardFavoriteRequest);
+
+        return BoardFavoriteResponse.builder()
+                .boardId(boardId)
+                .favoriteCount(savedFavorite.getBoard().getFavoriteCount())
+                .userName(savedFavorite.getUser().getName())
+                .studentNumber(savedFavorite.getUser().getStudentNumber())
+                .errorCode(ErrorCode.SUCCESS_REGISTER_FAVORITE_BOARD)
+                .build();
+    }
+
+    /** 관심 상품으로 등록 취소 */
+    @Transactional
+    public BoardFavoriteResponse cancelToFavoriteBoard(Long boardId, BoardFavoriteRequest boardFavoriteRequest) {
+        Board findBoard = boardRepository.findById(boardId)
+                .orElseThrow(() -> new CustomException(ErrorCode.NOT_FOUND_BOARD));
+        User findUser = userRepository.findByStudentNumber(boardFavoriteRequest.getStudentNumber())
+                .orElseThrow(() -> new CustomException(ErrorCode.NOT_FOUND_USER));
+
+        favoriteService.cancelFavorite(boardId, boardFavoriteRequest);
+
+        return BoardFavoriteResponse.builder()
+                .boardId(boardId)
+                .favoriteCount(findBoard.getFavoriteCount())
+                .userName(findUser.getName())
+                .studentNumber(findUser.getStudentNumber())
+                .errorCode(ErrorCode.SUCCESS_CANCEL_FAVORITE_BOARD)
+                .build();
+    }
+
     /** 게시글 삭제 */
     @Transactional
-    public void deleteBoard(Long boardId){
+    public BoardDeleteResponse deleteBoard(Long boardId){
         Board findBoard = boardRepository.findById(boardId)
                 .orElseThrow(() -> new CustomException(ErrorCode.NOT_FOUND_BOARD));
 
@@ -234,6 +269,15 @@ public class BoardService {
 
         deleteFromS3Bucket(findBoard);
         boardRepository.delete(findBoard);
+
+        // 게시글 삭제 시 해당 게시글과 관련된 관심 게시글 내역도 모두 삭제
+        favoriteService.deleteAllFavorites(boardId);
+
+        return BoardDeleteResponse.builder()
+                .boardId(findBoard.getId())
+                .title(findBoard.getTitle())
+                .errorCode(ErrorCode.SUCCESS_BOARD_DELETE.getDescription())
+                .build();
     }
 
     private void deleteFromS3Bucket(Board findBoard) {

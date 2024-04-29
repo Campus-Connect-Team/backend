@@ -1,6 +1,7 @@
 package com.campusconnect.backend.board.dto.response;
 
 import com.campusconnect.backend.board.domain.TradeStatus;
+import com.campusconnect.backend.util.exception.ErrorCode;
 import lombok.Builder;
 import lombok.Data;
 
@@ -20,6 +21,8 @@ public class BoardListResponse {
     private Integer chatCount;
     private TradeStatus tradeStatus;
 
+    private ErrorCode errorCode;
+
     @Builder
     public BoardListResponse(Long boardId,
                              String department,
@@ -30,7 +33,8 @@ public class BoardListResponse {
                              String title,
                              Integer favoriteCount,
                              Integer chatCount,
-                             TradeStatus tradeStatus) {
+                             TradeStatus tradeStatus,
+                             ErrorCode errorCode) {
         this.boardId = boardId;
         this.department = department;
         this.name = name;
@@ -41,5 +45,6 @@ public class BoardListResponse {
         this.favoriteCount = favoriteCount;
         this.chatCount = chatCount;
         this.tradeStatus = tradeStatus;
+        this.errorCode = errorCode;
     }
 }

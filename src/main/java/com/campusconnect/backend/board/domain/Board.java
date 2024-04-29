@@ -1,6 +1,7 @@
 package com.campusconnect.backend.board.domain;
 
 import com.campusconnect.backend.basetime.BaseTimeEntity;
+import com.campusconnect.backend.favorite.domain.Favorite;
 import com.campusconnect.backend.user.domain.User;
 import com.campusconnect.backend.util.exception.CustomException;
 import com.campusconnect.backend.util.exception.ErrorCode;
@@ -123,7 +124,9 @@ public class Board extends BaseTimeEntity {
 
     /** 관심 수 감소 */
     public void decreaseFavoriteCount() {
+        if (this.favoriteCount <= 0) {
+            throw new CustomException(ErrorCode.LIMIT_EXCEEDED_BY_ZERO_DECREASE_FAVORITE_COUNT);
+        }
         this.favoriteCount--;
     }
-
 }
