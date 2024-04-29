@@ -63,6 +63,16 @@ public class BoardController {
                 .body(boardService.getBoardListWithPaging(pageable));
     }
 
+    /** 학과, 게시글 제목으로 게시글 검색(조회) */
+    @GetMapping("/boards/search")
+    public ResponseEntity<List<BoardListResponse>> searchBoardWithSearchCond(@RequestParam(required = false) String department,
+                                                                             @RequestParam(required = false) String title,
+                                                                             @PageableDefault(size = 9, sort = "createdDate", direction = Sort.Direction.DESC) Pageable pageable) {
+        return ResponseEntity.status(HttpStatus.OK)
+                .body(boardService.searchBoardWithSearchCond(department, title, pageable));
+    }
+
+
     /** 게시글 수정 */
     @PatchMapping(value = "/boards/{boardId}", consumes = {MediaType.MULTIPART_FORM_DATA_VALUE})
     public ResponseEntity<BoardUpdateResponse> updateBoard(@PathVariable Long boardId,

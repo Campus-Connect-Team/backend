@@ -145,9 +145,25 @@ public class BoardService {
                 .collect(Collectors.toList());
     }
 
-    /**
-     * 게시글 수정
-     */
+    /** 학과, 게시글 제목으로 게시글 검색(조회) */
+    public List<BoardListResponse> searchBoardWithSearchCond(String department, String title, Pageable pageable) {
+        return boardRepository.searchBoardWithSearchCond(department, title, pageable).stream()
+                .map(board -> BoardListResponse.builder()
+                        .boardId(board.getId())
+                        .department(board.getUser().getDepartment())
+                        .name(board.getUser().getName())
+                        .createDate(board.getCreatedDate())
+                        .userProfileImage(board.getUser().getImage())
+                        .representativeImage(board.getBoardImages().get(0))
+                        .title(board.getTitle())
+                        .favoriteCount(board.getFavoriteCount())
+                        .chatCount(board.getChatCount())
+                        .tradeStatus(board.getTradeStatus())
+                        .build())
+                .collect(Collectors.toList());
+    }
+
+    /** 게시글 수정 */
     @Transactional
     public void updateBoard(Long boardId,
                             BoardUpdateRequest boardUpdateRequest,
@@ -201,9 +217,10 @@ public class BoardService {
 //        }
 //
 //
-//        // 기존 이미지 업데이트
 
+//        // 기존 이미지 업데이트
 //        board.updateBoardImages(updatedImages);
+
 //    }
 
     /** 게시글 삭제 */
@@ -231,5 +248,4 @@ public class BoardService {
             s3Uploader.deleteToBoardImage(imageName);
         }
     }
-
 }
