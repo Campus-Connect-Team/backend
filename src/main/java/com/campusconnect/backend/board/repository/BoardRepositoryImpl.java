@@ -2,6 +2,7 @@ package com.campusconnect.backend.board.repository;
 
 import com.campusconnect.backend.board.domain.Board;
 import com.campusconnect.backend.board.domain.QBoard;
+import com.campusconnect.backend.board.domain.TradeStatus;
 import com.querydsl.core.types.Predicate;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import lombok.RequiredArgsConstructor;
@@ -33,5 +34,16 @@ public class BoardRepositoryImpl implements BoardRepositoryCustom {
 
     private Predicate getBoardByTitle(String title) {
         return title != null ? (board.title.like("%" + title.replaceAll("\\s+", "") + "%")) : null;
+    }
+
+    // 거래 완료 건에 대한 게시글 조회
+    @Override
+    public List<Board> findTradeCompletedBoard(Long userId) {
+        return queryFactory
+                .select(board)
+                .from(board)
+                .where(board.tradeStatus.eq(TradeStatus.TRADE_COMPLETION)
+                        .and(board.user.id.eq(userId)))
+                .fetch();
     }
 }

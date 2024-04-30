@@ -5,6 +5,7 @@ import com.campusconnect.backend.user.domain.User;
 import com.campusconnect.backend.user.domain.UserImageInitializer;
 import com.campusconnect.backend.user.dto.request.*;
 import com.campusconnect.backend.user.dto.response.UserLoginResponse;
+import com.campusconnect.backend.user.dto.response.UserMyProfileAllResponse;
 import com.campusconnect.backend.user.service.UserService;
 import com.campusconnect.backend.util.email.service.EmailService;
 import com.campusconnect.backend.util.exception.ErrorCode;
@@ -13,6 +14,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -79,5 +81,12 @@ public class UserController {
         userService.validateAuthenticationCode(emailAuthenticationRequest);
         return ResponseEntity.status(ErrorCode.MATCH_AUTHENTICATION_CODE.getHttpStatus().value())
                 .body(new ErrorResponse(ErrorCode.MATCH_AUTHENTICATION_CODE));
+    }
+
+    /** 마이 페이지 조회 */
+    @GetMapping("/users/my-page")
+    public ResponseEntity<UserMyProfileAllResponse> getMyProfile(@RequestParam String studentNumber) {
+        return ResponseEntity.status(HttpStatus.OK)
+                .body(userService.getMyProfile(studentNumber));
     }
 }

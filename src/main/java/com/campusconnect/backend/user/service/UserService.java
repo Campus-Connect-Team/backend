@@ -2,14 +2,18 @@ package com.campusconnect.backend.user.service;
 
 import com.amazonaws.services.s3.AmazonS3Client;
 import com.campusconnect.backend.authentication.repository.AuthenticationRepository;
+import com.campusconnect.backend.board.domain.Board;
+import com.campusconnect.backend.board.repository.BoardRepository;
 import com.campusconnect.backend.config.aws.S3Uploader;
 import com.campusconnect.backend.user.domain.User;
-import com.campusconnect.backend.user.domain.UserImageInitializer;
 import com.campusconnect.backend.user.domain.UserRole;
 import com.campusconnect.backend.user.dto.request.EmailAuthenticationRequest;
 import com.campusconnect.backend.user.dto.request.UserLoginRequest;
 import com.campusconnect.backend.user.dto.request.UserSignUpRequest;
+import com.campusconnect.backend.user.dto.response.UserBasicProfileResponse;
 import com.campusconnect.backend.user.dto.response.UserLoginResponse;
+import com.campusconnect.backend.user.dto.response.UserMyProfileAllResponse;
+import com.campusconnect.backend.user.dto.response.UserSellerAndBuyerScoreResponse;
 import com.campusconnect.backend.user.repository.UserRepository;
 import com.campusconnect.backend.util.exception.CustomException;
 import com.campusconnect.backend.util.exception.ErrorCode;
@@ -24,6 +28,8 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
+import java.util.Collections;
+import java.util.List;
 
 @Service
 @Transactional(readOnly = true)
@@ -33,6 +39,7 @@ public class UserService {
 
     private final AuthenticationRepository authenticationRepository;
     private final UserRepository userRepository;
+    private final BoardRepository boardRepository;
     private final PasswordEncoder passwordEncoder;
     private final JwtProvider jwtProvider;
     private final S3Uploader s3Uploader;
@@ -136,5 +143,27 @@ public class UserService {
 
         String token = jwtProvider.createToken(studentNumber, secretKey, expiredMs);
         return new UserLoginResponse(findUser.getStudentNumber(), token, expiredMs);
+    }
+
+    /** 마이 페이지 조회 */
+    public UserMyProfileAllResponse getMyProfile(String studentNumber) {
+        // 기본 프로필 영역
+        User findUser = userRepository.findByStudentNumber(studentNumber)
+                .orElseThrow(() -> new CustomException(ErrorCode.NOT_FOUND_USER));
+
+        UserBasicProfileResponse basicProfileResponse = UserBasicProfileResponse.builder()
+                .college(findUser.getCollege())
+                .department(findUser.getDepartment())
+                .studentNumber(findUser.getStudentNumber())
+                .name(findUser.getName())
+                .email(findUser.getEmail())
+                .image(findUser.getImage())
+                .build();
+
+        List<UserBasicProfileResponse> basicProfileResponses = Collections.singletonList(basicProfileResponse);
+
+        return UserMyProfileAllResponse.builder()
+                .basicProfileResponses(basicProfileResponses)
+                .build();
     }
 }
