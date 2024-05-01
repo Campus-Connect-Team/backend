@@ -8,8 +8,6 @@ import lombok.Data;
 @Data
 public class UserBasicProfileEditRequest {
 
-    private String image;
-
     @NotEmpty(message = "단과대학 정보는 필수 사항입니다.")
     private String college;
 
@@ -21,11 +19,9 @@ public class UserBasicProfileEditRequest {
     private String name;
 
     @Builder
-    public UserBasicProfileEditRequest(String image,
-                                       String college,
+    public UserBasicProfileEditRequest(String college,
                                        String department,
                                        String name) {
-        this.image = image;
         this.college = college;
         this.department = department;
         this.name = name;
