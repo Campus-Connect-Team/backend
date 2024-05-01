@@ -13,7 +13,7 @@ public class BoardDetailResponse {
     private Long boardId;
     private String department;
     private String name;
-    private String createDate;
+    private LocalDateTime createDate;
     private Double sellerManner;
     private List<String> boardImages;
     private String title;
@@ -26,7 +26,7 @@ public class BoardDetailResponse {
     public BoardDetailResponse(Long boardId,
                                String department,
                                String name,
-                               String createDate,
+                               LocalDateTime createDate,
                                Double sellerManner,
                                List<String> boardImages,
                                String title,

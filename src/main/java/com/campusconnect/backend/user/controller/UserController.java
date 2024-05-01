@@ -4,6 +4,7 @@ import com.campusconnect.backend.config.aws.S3Uploader;
 import com.campusconnect.backend.user.domain.User;
 import com.campusconnect.backend.user.domain.UserImageInitializer;
 import com.campusconnect.backend.user.dto.request.*;
+import com.campusconnect.backend.user.dto.response.UserBasicProfileEditResponse;
 import com.campusconnect.backend.user.dto.response.UserLoginResponse;
 import com.campusconnect.backend.user.dto.response.UserMyProfileAllResponse;
 import com.campusconnect.backend.user.service.UserService;
@@ -88,5 +89,15 @@ public class UserController {
     public ResponseEntity<UserMyProfileAllResponse> getMyProfile(@RequestParam String studentNumber) {
         return ResponseEntity.status(HttpStatus.OK)
                 .body(userService.getMyProfile(studentNumber));
+    }
+
+    /** 마이 페이지 조회 - 기본 프로필 영역 수정 */
+    @PatchMapping(value = "/users/my-page/basic", consumes = {MediaType.MULTIPART_FORM_DATA_VALUE})
+    public ResponseEntity<UserBasicProfileEditResponse> editMyBasicProfile(HttpServletRequest request,
+                                                                           @RequestParam(value = "studentNumber") String studentNumber,
+                                                                           @RequestPart(value = "request") UserBasicProfileEditRequest userBasicProfileEditRequest,
+                                                                           @RequestPart(value = "image", required = false) MultipartFile multipartFile) throws IOException {
+        return ResponseEntity.status(HttpStatus.OK)
+                .body(userService.editMyBasicProfile(studentNumber, userBasicProfileEditRequest, multipartFile));
     }
 }

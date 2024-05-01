@@ -2,18 +2,16 @@ package com.campusconnect.backend.user.service;
 
 import com.amazonaws.services.s3.AmazonS3Client;
 import com.campusconnect.backend.authentication.repository.AuthenticationRepository;
-import com.campusconnect.backend.board.domain.Board;
 import com.campusconnect.backend.board.repository.BoardRepository;
 import com.campusconnect.backend.config.aws.S3Uploader;
 import com.campusconnect.backend.user.domain.User;
+import com.campusconnect.backend.user.domain.UserImageInitializer;
 import com.campusconnect.backend.user.domain.UserRole;
 import com.campusconnect.backend.user.dto.request.EmailAuthenticationRequest;
+import com.campusconnect.backend.user.dto.request.UserBasicProfileEditRequest;
 import com.campusconnect.backend.user.dto.request.UserLoginRequest;
 import com.campusconnect.backend.user.dto.request.UserSignUpRequest;
-import com.campusconnect.backend.user.dto.response.UserBasicProfileResponse;
-import com.campusconnect.backend.user.dto.response.UserLoginResponse;
-import com.campusconnect.backend.user.dto.response.UserMyProfileAllResponse;
-import com.campusconnect.backend.user.dto.response.UserSellerAndBuyerScoreResponse;
+import com.campusconnect.backend.user.dto.response.*;
 import com.campusconnect.backend.user.repository.UserRepository;
 import com.campusconnect.backend.util.exception.CustomException;
 import com.campusconnect.backend.util.exception.ErrorCode;
@@ -28,6 +26,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
+import java.time.LocalDateTime;
 import java.util.Collections;
 import java.util.List;
 
@@ -164,6 +163,49 @@ public class UserService {
 
         return UserMyProfileAllResponse.builder()
                 .basicProfileResponses(basicProfileResponses)
+                .build();
+    }
+
+    /** 마이 페이지 조회 - 기본 프로필 영역 수정 */
+    @Transactional
+    public UserBasicProfileEditResponse editMyBasicProfile(String studentNumber,
+                                                           UserBasicProfileEditRequest userBasicProfileEditRequest,
+                                                           MultipartFile multipartFile) throws IOException {
+        // 존재하는 사용자인지 확인
+        User findUser = userRepository.findByStudentNumber(studentNumber)
+                .orElseThrow(() -> new CustomException(ErrorCode.NOT_FOUND_USER));
+
+        // 변경 사항이 있는지 확인
+        boolean changesDetected = false;
+
+        // 멀티파트 파일로 이미지만 변경된 경우 처리
+        if (multipartFile != null && !multipartFile.isEmpty()) {
+            String imageUrl = s3Uploader.upload(multipartFile, "user");
+            String previousImage = findUser.getImage().replace("https://campus-connect-backend.s3.ap-northeast-2.amazonaws.com/user/", "");
+            s3Uploader.deleteToUserProfileImage(previousImage);
+            findUser.editProfileImage(imageUrl);
+            changesDetected = true;
+
+            // 수정 전 기존 이미지가 있고, 이를 변경하지 않는 경우
+        } else if (multipartFile != null && ((findUser.getImage().replace("https://campus-connect-backend.s3.ap-northeast-2.amazonaws.com/user/", "")).equals(multipartFile.getName()))) {
+            findUser.editProfileImage(multipartFile.getName());
+        } else {
+            // 만약 기존 이미지가 있었으나 기본 프로필로 설정한다면, 버킷에서 기존에 설정되어 있던 이미지는 삭제
+            if (findUser.getImage().equals(findUser.getImage())) {
+                String previousImage = findUser.getImage().replace("https://campus-connect-backend.s3.ap-northeast-2.amazonaws.com/user/", "");
+                s3Uploader.deleteToUserProfileImage(previousImage);
+            }
+            findUser.setProfileImageToBasicImage();
+        }
+
+        // UserBasicProfileEditRequest에 의한 정보 변경
+        findUser.editMyBasicProfile(userBasicProfileEditRequest.getCollege(),
+                userBasicProfileEditRequest.getDepartment(),
+                userBasicProfileEditRequest.getName());
+
+        return UserBasicProfileEditResponse.builder()
+                .userId(findUser.getId())
+                .responseCode(ErrorCode.SUCCESS_EDIT_MY_BASIC_PROFILE.getDescription())
                 .build();
     }
 }
