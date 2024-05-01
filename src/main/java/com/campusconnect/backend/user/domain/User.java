@@ -1,15 +1,11 @@
 package com.campusconnect.backend.user.domain;
 
 import com.campusconnect.backend.basetime.BaseTimeEntity;
-import com.campusconnect.backend.util.exception.CustomException;
-import com.campusconnect.backend.util.exception.ErrorCode;
 import jakarta.persistence.*;
 import lombok.*;
 import lombok.extern.slf4j.Slf4j;
 
 import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
-import java.time.temporal.ChronoUnit;
 
 @Entity
 @Table(name = "users")
@@ -85,6 +81,11 @@ public class User extends BaseTimeEntity {
         this.college = college;
         this.department = department;
         this.name = name;
+    }
+
+    /** 마이 페이지 - 비밀번호 변경 */
+    public void updateCurrentPassword(String password) {
+        this.password = password;
     }
 
     /** 프로필 이미지를 제외한 나머지 수정의 경우 MODIFIED_DATE 최신화 */

@@ -5,17 +5,14 @@ import com.campusconnect.backend.authentication.repository.AuthenticationReposit
 import com.campusconnect.backend.board.repository.BoardRepository;
 import com.campusconnect.backend.config.aws.S3Uploader;
 import com.campusconnect.backend.user.domain.User;
-import com.campusconnect.backend.user.domain.UserImageInitializer;
 import com.campusconnect.backend.user.domain.UserRole;
-import com.campusconnect.backend.user.dto.request.EmailAuthenticationRequest;
-import com.campusconnect.backend.user.dto.request.UserBasicProfileEditRequest;
-import com.campusconnect.backend.user.dto.request.UserLoginRequest;
-import com.campusconnect.backend.user.dto.request.UserSignUpRequest;
+import com.campusconnect.backend.user.dto.request.*;
 import com.campusconnect.backend.user.dto.response.*;
 import com.campusconnect.backend.user.repository.UserRepository;
 import com.campusconnect.backend.util.exception.CustomException;
 import com.campusconnect.backend.util.exception.ErrorCode;
 import com.campusconnect.backend.util.jwt.JwtProvider;
+import com.campusconnect.backend.util.validator.PasswordMatchesValidator;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -26,7 +23,6 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
-import java.time.LocalDateTime;
 import java.util.Collections;
 import java.util.List;
 
@@ -40,6 +36,7 @@ public class UserService {
     private final UserRepository userRepository;
     private final BoardRepository boardRepository;
     private final PasswordEncoder passwordEncoder;
+    private final PasswordMatchesValidator passwordMatchesValidator;
     private final JwtProvider jwtProvider;
     private final S3Uploader s3Uploader;
     private final AmazonS3Client amazonS3Client;
@@ -168,7 +165,7 @@ public class UserService {
 
     /** 마이 페이지 조회 - 기본 프로필 영역 수정 */
     @Transactional
-    public UserBasicProfileEditResponse editMyBasicProfile(String studentNumber,
+    public UserBasicProfileEditResponse updateMyBasicProfile(String studentNumber,
                                                            UserBasicProfileEditRequest userBasicProfileEditRequest,
                                                            MultipartFile multipartFile) throws IOException {
         // 존재하는 사용자인지 확인
@@ -207,5 +204,32 @@ public class UserService {
                 .userId(findUser.getId())
                 .responseCode(ErrorCode.SUCCESS_EDIT_MY_BASIC_PROFILE.getDescription())
                 .build();
+    }
+
+    /** 마이 페이지 - 비밀번호 수정 */
+    @Transactional
+    public UserPasswordUpdateResponse updateUserPassword(String studentNumber, UserPasswordUpdateRequest userPasswordUpdateRequest) {
+        User findUser = userRepository.findByStudentNumber(studentNumber)
+                .orElseThrow(() -> new CustomException(ErrorCode.NOT_FOUND_USER));
+
+        validatePasswordUpdateProcess(userPasswordUpdateRequest, findUser);
+
+        String encodedEditPassword = passwordEncoder.encode(userPasswordUpdateRequest.getEditPassword());
+        findUser.updateCurrentPassword(encodedEditPassword);
+
+        return UserPasswordUpdateResponse.builder()
+                .userId(findUser.getId())
+                .responseCode(ErrorCode.SUCCESS_UPDATE_PASSWORD.getDescription())
+                .build();
+    }
+
+    private void validatePasswordUpdateProcess(UserPasswordUpdateRequest userPasswordUpdateRequest, User findUser) {
+        if (!passwordEncoder.matches(userPasswordUpdateRequest.getCurrentPassword(), findUser.getPassword())) {
+            throw new CustomException(ErrorCode.NOT_MATCHED_CURRENT_PASSWORD);
+        }
+
+        if (!passwordMatchesValidator.isValid(userPasswordUpdateRequest, null)) {
+            throw new CustomException(ErrorCode.NOT_MATCHED_EDIT_PASSWORD);
+        }
     }
 }

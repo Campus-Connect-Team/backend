@@ -7,6 +7,7 @@ import com.campusconnect.backend.user.dto.request.*;
 import com.campusconnect.backend.user.dto.response.UserBasicProfileEditResponse;
 import com.campusconnect.backend.user.dto.response.UserLoginResponse;
 import com.campusconnect.backend.user.dto.response.UserMyProfileAllResponse;
+import com.campusconnect.backend.user.dto.response.UserPasswordUpdateResponse;
 import com.campusconnect.backend.user.service.UserService;
 import com.campusconnect.backend.util.email.service.EmailService;
 import com.campusconnect.backend.util.exception.ErrorCode;
@@ -91,13 +92,20 @@ public class UserController {
                 .body(userService.getMyProfile(studentNumber));
     }
 
-    /** 마이 페이지 조회 - 기본 프로필 영역 수정 */
-    @PatchMapping(value = "/users/my-page/basic", consumes = {MediaType.MULTIPART_FORM_DATA_VALUE})
+    /** 마이 페이지 - 기본 프로필 영역 수정 */
+    @PatchMapping(value = "/users/my-page/basic/{studentNumber}", consumes = {MediaType.MULTIPART_FORM_DATA_VALUE})
     public ResponseEntity<UserBasicProfileEditResponse> editMyBasicProfile(HttpServletRequest request,
-                                                                           @RequestParam(value = "studentNumber") String studentNumber,
+                                                                           @PathVariable(value = "studentNumber") String studentNumber,
                                                                            @RequestPart(value = "request") UserBasicProfileEditRequest userBasicProfileEditRequest,
                                                                            @RequestPart(value = "image", required = false) MultipartFile multipartFile) throws IOException {
         return ResponseEntity.status(HttpStatus.OK)
-                .body(userService.editMyBasicProfile(studentNumber, userBasicProfileEditRequest, multipartFile));
+                .body(userService.updateMyBasicProfile(studentNumber, userBasicProfileEditRequest, multipartFile));
+    }
+
+    /** 마이 페이지 - 비밀번호 수정 */
+    @PatchMapping("/users/my-page/password/{studentNumber}")
+    public ResponseEntity<UserPasswordUpdateResponse> updateUserPassword(@PathVariable String studentNumber, @RequestBody @Valid UserPasswordUpdateRequest userPasswordUpdateRequest) {
+        return ResponseEntity.status(HttpStatus.OK)
+                .body(userService.updateUserPassword(studentNumber, userPasswordUpdateRequest));
     }
 }
