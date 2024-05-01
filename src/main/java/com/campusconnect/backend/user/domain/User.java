@@ -1,14 +1,22 @@
 package com.campusconnect.backend.user.domain;
 
 import com.campusconnect.backend.basetime.BaseTimeEntity;
+import com.campusconnect.backend.util.exception.CustomException;
+import com.campusconnect.backend.util.exception.ErrorCode;
 import jakarta.persistence.*;
 import lombok.*;
+import lombok.extern.slf4j.Slf4j;
+
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+import java.time.temporal.ChronoUnit;
 
 @Entity
 @Table(name = "users")
 @Getter
 @NoArgsConstructor(access = AccessLevel.PUBLIC)
 @AllArgsConstructor
+@Slf4j
 public class User extends BaseTimeEntity {
 
     @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -68,5 +76,28 @@ public class User extends BaseTimeEntity {
         this.sellerManner = 0.0D;
         this.buyerManner = 0.0D;
         this.role = UserRole.USER;
+    }
+
+    /** 마이 페이지 - 기본 프로필 수정 */
+    public void editMyBasicProfile(String college,
+                                   String department,
+                                   String name) {
+        this.college = college;
+        this.department = department;
+        this.name = name;
+    }
+
+    /** 프로필 이미지를 제외한 나머지 수정의 경우 MODIFIED_DATE 최신화 */
+    public void editModifiedDate() {
+        this.setModifiedDate(LocalDateTime.now());
+    }
+
+    /** 정보 수정 시 프로필 이미지를 고르지 않았다면 기본 이미지 설정 */
+    public void setProfileImageToBasicImage() {
+        this.image = UserImageInitializer.getDefaultImageUrl();
+    }
+
+    public void editProfileImage(String imageUrl) {
+        this.image = imageUrl;
     }
 }

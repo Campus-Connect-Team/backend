@@ -40,6 +40,16 @@ public enum ErrorCode {
 
 
 
+    // 회원 도메인 : 마이 페이지
+    MODIFIED_DATE_UNDER_THREE_MONTHS(HttpStatus.BAD_REQUEST, "USER-013", "마지막 프로필 수정일로부터 3개월 이상 경과되지 않아 프로필 수정할 수 없습니다."),
+    NO_CHANGES_USER_BASIC_PROFILE(HttpStatus.BAD_REQUEST, "USER-013", "마지막 프로필 수정일로부터 3개월 이상 경과되지 않아 프로필 수정할 수 없습니다."),
+
+    // 회원 도메인 : 마이 페이지 - 처리 가능한 요청에 대한 Response Status Code
+    SUCCESS_EDIT_MY_BASIC_PROFILE(HttpStatus.OK, "USER-015", "기본 프로필 수정이 완료되었습니다."),
+
+
+
+
     // 게시판 도메인 : 게시글 기본 CRUD, 그외 세부 기능들
     NOT_FOUND_BOARD(HttpStatus.BAD_REQUEST, "BOARD-001", "해당 판매 게시글이 존재하지 않습니다."),
     NOT_FOUND_BOARD_IMAGES(HttpStatus.BAD_REQUEST, "BOARD-002", "판매 게시글에 대한 판매 사진이 업로드되지 않았습니다."),
