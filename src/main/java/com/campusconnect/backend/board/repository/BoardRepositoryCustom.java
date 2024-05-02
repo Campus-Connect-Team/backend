@@ -13,4 +13,7 @@ public interface BoardRepositoryCustom {
 
     // 거래 완료 건에 대한 게시글 조회
     List<Board> findTradeCompletedBoard(Long userId);
+
+    // 회원 탈퇴 - 해당 사용자가 작성한 모든 게시글 조회
+    List<Board> findBoards(Long userId);
 }

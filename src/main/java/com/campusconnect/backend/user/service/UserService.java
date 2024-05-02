@@ -2,7 +2,9 @@ package com.campusconnect.backend.user.service;
 
 import com.amazonaws.services.s3.AmazonS3Client;
 import com.campusconnect.backend.authentication.repository.AuthenticationRepository;
+import com.campusconnect.backend.board.domain.Board;
 import com.campusconnect.backend.board.repository.BoardRepository;
+import com.campusconnect.backend.board.service.BoardService;
 import com.campusconnect.backend.config.aws.S3Uploader;
 import com.campusconnect.backend.user.domain.User;
 import com.campusconnect.backend.user.domain.UserRole;
@@ -13,6 +15,7 @@ import com.campusconnect.backend.util.exception.CustomException;
 import com.campusconnect.backend.util.exception.ErrorCode;
 import com.campusconnect.backend.util.jwt.JwtProvider;
 import com.campusconnect.backend.util.validator.PasswordMatchesValidator;
+import com.campusconnect.backend.util.validator.PasswordMatchesValidatorForAccountWithdrawal;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -35,8 +38,10 @@ public class UserService {
     private final AuthenticationRepository authenticationRepository;
     private final UserRepository userRepository;
     private final BoardRepository boardRepository;
+    private final BoardService boardService;
     private final PasswordEncoder passwordEncoder;
     private final PasswordMatchesValidator passwordMatchesValidator;
+    private final PasswordMatchesValidatorForAccountWithdrawal passwordMatchesValidatorForAccountWithdrawal;
     private final JwtProvider jwtProvider;
     private final S3Uploader s3Uploader;
     private final AmazonS3Client amazonS3Client;
@@ -212,7 +217,7 @@ public class UserService {
         User findUser = userRepository.findByStudentNumber(studentNumber)
                 .orElseThrow(() -> new CustomException(ErrorCode.NOT_FOUND_USER));
 
-        validatePasswordUpdateProcess(userPasswordUpdateRequest, findUser);
+        validateForPasswordUpdateProcess(userPasswordUpdateRequest, findUser);
 
         String encodedEditPassword = passwordEncoder.encode(userPasswordUpdateRequest.getEditPassword());
         findUser.updateCurrentPassword(encodedEditPassword);
@@ -223,13 +228,44 @@ public class UserService {
                 .build();
     }
 
-    private void validatePasswordUpdateProcess(UserPasswordUpdateRequest userPasswordUpdateRequest, User findUser) {
+    private void validateForPasswordUpdateProcess(UserPasswordUpdateRequest userPasswordUpdateRequest, User findUser) {
         if (!passwordEncoder.matches(userPasswordUpdateRequest.getCurrentPassword(), findUser.getPassword())) {
             throw new CustomException(ErrorCode.NOT_MATCHED_CURRENT_PASSWORD);
         }
 
         if (!passwordMatchesValidator.isValid(userPasswordUpdateRequest, null)) {
             throw new CustomException(ErrorCode.NOT_MATCHED_EDIT_PASSWORD);
+        }
+    }
+
+    /** 마이 페이지 - 회원 탈퇴 */
+    @Transactional
+    public UserWithdrawalResponse withdrawalAccount(String studentNumber, UserWithdrawalRequest userWithdrawalRequest) {
+        // 탈퇴할 회원정보와, 해당 회원이 작성한 게시글을 모두 조회
+        User withdrawalUser = userRepository.findByStudentNumber(studentNumber)
+                .orElseThrow(() -> new CustomException(ErrorCode.NOT_FOUND_USER));
+
+        List<Board> boardList = boardRepository.findBoards(withdrawalUser.getId());
+
+        validateForAccountWithdrawal(userWithdrawalRequest, withdrawalUser);
+        userRepository.delete(withdrawalUser);
+        String userProfileImage = withdrawalUser.getImage().replace("https://campus-connect-backend.s3.ap-northeast-2.amazonaws.com/user/", "");
+        s3Uploader.deleteToUserProfileImage(userProfileImage);
+        boardService.deleteFromS3BucketToMultipleBoards(boardList);
+
+        return UserWithdrawalResponse.builder()
+                .userId(withdrawalUser.getId())
+                .responseCode(ErrorCode.SUCCESS_WITHDRAWAL_USER.getDescription())
+                .build();
+    }
+
+    private void validateForAccountWithdrawal(UserWithdrawalRequest userWithdrawalRequest, User findUser) {
+        if (!passwordEncoder.matches(userWithdrawalRequest.getCurrentPassword(), findUser.getPassword())) {
+            throw new CustomException(ErrorCode.NOT_MATCHED_CURRENT_PASSWORD);
+        }
+
+        if (!passwordMatchesValidatorForAccountWithdrawal.isValid(userWithdrawalRequest, null)) {
+            throw new CustomException(ErrorCode.NOT_MATCHED_CHECK_CURRENT_PASSWORD);
         }
     }
 }

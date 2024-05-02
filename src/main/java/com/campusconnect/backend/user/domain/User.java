@@ -1,11 +1,13 @@
 package com.campusconnect.backend.user.domain;
 
 import com.campusconnect.backend.basetime.BaseTimeEntity;
+import com.campusconnect.backend.board.domain.Board;
 import jakarta.persistence.*;
 import lombok.*;
 import lombok.extern.slf4j.Slf4j;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Entity
 @Table(name = "users")
@@ -49,6 +51,9 @@ public class User extends BaseTimeEntity {
     @Enumerated(EnumType.STRING)
     @Column(name = "role")
     private UserRole role;
+
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<Board> boards;
 
     @Builder
     public User(Long id,

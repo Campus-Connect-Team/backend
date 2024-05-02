@@ -4,10 +4,7 @@ import com.campusconnect.backend.config.aws.S3Uploader;
 import com.campusconnect.backend.user.domain.User;
 import com.campusconnect.backend.user.domain.UserImageInitializer;
 import com.campusconnect.backend.user.dto.request.*;
-import com.campusconnect.backend.user.dto.response.UserBasicProfileEditResponse;
-import com.campusconnect.backend.user.dto.response.UserLoginResponse;
-import com.campusconnect.backend.user.dto.response.UserMyProfileAllResponse;
-import com.campusconnect.backend.user.dto.response.UserPasswordUpdateResponse;
+import com.campusconnect.backend.user.dto.response.*;
 import com.campusconnect.backend.user.service.UserService;
 import com.campusconnect.backend.util.email.service.EmailService;
 import com.campusconnect.backend.util.exception.ErrorCode;
@@ -107,5 +104,12 @@ public class UserController {
     public ResponseEntity<UserPasswordUpdateResponse> updateUserPassword(@PathVariable String studentNumber, @RequestBody @Valid UserPasswordUpdateRequest userPasswordUpdateRequest) {
         return ResponseEntity.status(HttpStatus.OK)
                 .body(userService.updateUserPassword(studentNumber, userPasswordUpdateRequest));
+    }
+
+    /** 마이 페이지 - 회원 탈퇴 */
+    @DeleteMapping("/users/my-page/withdrawal/{studentNumber}")
+    public ResponseEntity<UserWithdrawalResponse> withdrawalAccount(@PathVariable String studentNumber, @RequestBody @Valid UserWithdrawalRequest userWithdrawalRequest) {
+        return ResponseEntity.status(HttpStatus.OK)
+                .body(userService.withdrawalAccount(studentNumber, userWithdrawalRequest));
     }
 }
