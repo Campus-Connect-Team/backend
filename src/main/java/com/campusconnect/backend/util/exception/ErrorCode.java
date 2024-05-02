@@ -42,13 +42,15 @@ public enum ErrorCode {
 
     // 회원 도메인 : 마이 페이지
     NOT_MATCHED_CURRENT_PASSWORD(HttpStatus.BAD_REQUEST, "USER-013", "현재 비밀번호가 일치하지 않습니다."),
-    NOT_MATCHED_EDIT_PASSWORD(HttpStatus.BAD_REQUEST, "USER-014", "변경할 비밀번호가 일치하지 않습니다."),
+    NOT_MATCHED_CHECK_CURRENT_PASSWORD(HttpStatus.BAD_REQUEST, "USER-014", "입력하신 현재 비밀번호와 일치하지 않습니다."),
+    NOT_MATCHED_EDIT_PASSWORD(HttpStatus.BAD_REQUEST, "USER-015", "변경할 비밀번호가 일치하지 않습니다."),
 
 
 
     // 회원 도메인 : 마이 페이지 - 처리 가능한 요청에 대한 Response Status Code
     SUCCESS_EDIT_MY_BASIC_PROFILE(HttpStatus.OK, "USER-016", "기본 프로필 수정이 완료되었습니다."),
-    SUCCESS_UPDATE_PASSWORD(HttpStatus.OK, "USER-015", "비밀번호가 변경되었습니다."),
+    SUCCESS_UPDATE_PASSWORD(HttpStatus.OK, "USER-017", "비밀번호가 변경되었습니다."),
+    SUCCESS_WITHDRAWAL_USER(HttpStatus.OK, "USER-018", "회원 탈퇴가 완료되었습니다."),
 
 
 

@@ -280,7 +280,7 @@ public class BoardService {
                 .build();
     }
 
-    private void deleteFromS3Bucket(Board findBoard) {
+    public void deleteFromS3Bucket(Board findBoard) {
         List<String> findBoardImages = findBoard.getBoardImagesToBoardImageType().stream()
                 .map(BoardImage::getBoardImage)
                 .collect(Collectors.toList());
@@ -290,6 +290,21 @@ public class BoardService {
             String imageName = image.replace(bucketUrl, "");
             log.info("imageName = {}", imageName);
             s3Uploader.deleteToBoardImage(imageName);
+        }
+    }
+
+    public void deleteFromS3BucketToMultipleBoards(List<Board> findBoards) {
+        for (Board findBoard : findBoards) {
+            List<String> findBoardImages = findBoard.getBoardImagesToBoardImageType().stream()
+                    .map(BoardImage::getBoardImage)
+                    .collect(Collectors.toList());
+
+            for (String image : findBoardImages) {
+                String bucketUrl = "https://campus-connect-backend.s3.ap-northeast-2.amazonaws.com/board/";
+                String imageName = image.replace(bucketUrl, "");
+                log.info("imageName = {}", imageName);
+                s3Uploader.deleteToBoardImage(imageName);
+            }
         }
     }
 }

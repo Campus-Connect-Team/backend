@@ -46,4 +46,14 @@ public class BoardRepositoryImpl implements BoardRepositoryCustom {
                         .and(board.user.id.eq(userId)))
                 .fetch();
     }
+
+    // 회원 탈퇴 - 해당 사용자가 작성한 모든 게시글 조회
+    @Override
+    public List<Board> findBoards(Long userId) {
+        return queryFactory
+                .select(board)
+                .from(board)
+                .where(board.user.id.eq(userId))
+                .fetch();
+    }
 }

@@ -10,7 +10,7 @@ import java.lang.annotation.Target;
 
 @Target({ElementType.TYPE, ElementType.ANNOTATION_TYPE})
 @Retention(RetentionPolicy.RUNTIME)
-@Constraint(validatedBy = PasswordMatchesValidator.class)
+@Constraint(validatedBy = {PasswordMatchesValidator.class, PasswordMatchesValidatorForAccountWithdrawal.class})
 public @interface PasswordMatches {
 
     String message() default "비밀번호가 일치하지 않습니다.";
