@@ -6,6 +6,8 @@ import com.campusconnect.backend.board.domain.Board;
 import com.campusconnect.backend.board.repository.BoardRepository;
 import com.campusconnect.backend.board.service.BoardService;
 import com.campusconnect.backend.config.aws.S3Uploader;
+import com.campusconnect.backend.favorite.domain.Favorite;
+import com.campusconnect.backend.favorite.repository.FavoriteRepository;
 import com.campusconnect.backend.user.domain.User;
 import com.campusconnect.backend.user.domain.UserRole;
 import com.campusconnect.backend.user.dto.request.*;
@@ -28,6 +30,7 @@ import org.springframework.web.multipart.MultipartFile;
 import java.io.IOException;
 import java.util.Collections;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 @Transactional(readOnly = true)
@@ -38,6 +41,7 @@ public class UserService {
     private final AuthenticationRepository authenticationRepository;
     private final UserRepository userRepository;
     private final BoardRepository boardRepository;
+    private final FavoriteRepository favoriteRepository;
     private final BoardService boardService;
     private final PasswordEncoder passwordEncoder;
     private final PasswordMatchesValidator passwordMatchesValidator;
@@ -163,8 +167,26 @@ public class UserService {
 
         List<UserBasicProfileResponse> basicProfileResponses = Collections.singletonList(basicProfileResponse);
 
+        // 관심 상품 리스트 영역
+        List<Favorite> userFavoriteList = favoriteRepository.findUserFavoriteList(findUser.getStudentNumber());
+
+        List<MyFavoriteListResponse> myFavoriteListResponses = userFavoriteList.stream()
+                .map(favorite -> MyFavoriteListResponse.builder()
+                        .sellerImage(favorite.getBoard().getUser().getImage())
+                        .sellerDepartment(favorite.getBoard().getUser().getDepartment())
+                        .sellerName(favorite.getBoard().getUser().getName())
+                        .favoriteCount(favorite.getBoard().getFavoriteCount())
+                        .chatCount(favorite.getBoard().getChatCount())
+                        .boardTitle(favorite.getBoard().getTitle())
+                        .tradeStatus(favorite.getBoard().getTradeStatus())
+                        .build())
+                .collect(Collectors.toList());
+        int favoriteListCount = userFavoriteList.size();
+
         return UserMyProfileAllResponse.builder()
                 .basicProfileResponses(basicProfileResponses)
+                .favoriteListCount(favoriteListCount)
+                .myFavoriteListResponses(myFavoriteListResponses)
                 .build();
     }
 

@@ -1,10 +1,13 @@
 package com.campusconnect.backend.favorite.repository;
 
+import com.campusconnect.backend.favorite.domain.Favorite;
 import com.campusconnect.backend.favorite.domain.QFavorite;
 import com.campusconnect.backend.user.domain.QUser;
 import com.campusconnect.backend.user.domain.User;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import lombok.RequiredArgsConstructor;
+
+import java.util.List;
 
 import static com.campusconnect.backend.favorite.domain.QFavorite.*;
 import static com.campusconnect.backend.user.domain.QUser.user;
@@ -46,5 +49,15 @@ public class FavoriteRepositoryImpl implements FavoriteRepositoryCustom {
                 delete(favorite)
                 .where(favorite.board.id.eq(boardId))
                 .execute();
+    }
+
+    // 특정 유저의 관심 상품 리스트 조회
+    @Override
+    public List<Favorite> findUserFavoriteList(String studentNumber) {
+        return queryFactory
+                .select(favorite)
+                .from(favorite)
+                .where(favorite.user.studentNumber.eq(studentNumber))
+                .fetch();
     }
 }

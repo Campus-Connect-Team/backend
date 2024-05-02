@@ -21,8 +21,6 @@ public class BoardListResponse {
     private Integer chatCount;
     private TradeStatus tradeStatus;
 
-    private ErrorCode errorCode;
-
     @Builder
     public BoardListResponse(Long boardId,
                              String department,
@@ -33,8 +31,7 @@ public class BoardListResponse {
                              String title,
                              Integer favoriteCount,
                              Integer chatCount,
-                             TradeStatus tradeStatus,
-                             ErrorCode errorCode) {
+                             TradeStatus tradeStatus) {
         this.boardId = boardId;
         this.department = department;
         this.name = name;
@@ -45,6 +42,5 @@ public class BoardListResponse {
         this.favoriteCount = favoriteCount;
         this.chatCount = chatCount;
         this.tradeStatus = tradeStatus;
-        this.errorCode = errorCode;
     }
 }
