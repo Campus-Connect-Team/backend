@@ -56,4 +56,14 @@ public class BoardRepositoryImpl implements BoardRepositoryCustom {
                 .where(board.user.id.eq(userId))
                 .fetch();
     }
+
+    // 마이 페이지 - 작성한 판매 게시글 리스트 영역 조회
+    @Override
+    public List<Board> findBoardsByStudentNumber(String studentNumber) {
+        return queryFactory
+                .select(board)
+                .from(board)
+                .where(board.user.studentNumber.eq(studentNumber))
+                .fetch();
+    }
 }

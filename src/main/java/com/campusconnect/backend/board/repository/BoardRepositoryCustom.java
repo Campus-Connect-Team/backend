@@ -16,4 +16,7 @@ public interface BoardRepositoryCustom {
 
     // 회원 탈퇴 - 해당 사용자가 작성한 모든 게시글 조회
     List<Board> findBoards(Long userId);
+
+    // 마이 페이지 - 작성한 판매 게시글 리스트 영역 조회
+    List<Board> findBoardsByStudentNumber(String studentNumber);
 }

@@ -183,10 +183,23 @@ public class UserService {
                 .collect(Collectors.toList());
         int favoriteListCount = userFavoriteList.size();
 
+        // 작성한 판매 게시글 리스트 영역
+        List<Board> createdBoardList = boardRepository.findBoardsByStudentNumber(studentNumber);
+
+        List<CreatedBoardListResponse> createdBoardListResponses = createdBoardList.stream()
+                .map(board -> CreatedBoardListResponse.builder()
+                        .tradeStatus(board.getTradeStatus())
+                        .boardTitle(board.getTitle())
+                        .build())
+                .collect(Collectors.toList());
+        int createdBoardListCount = createdBoardList.size();
+
         return UserMyProfileAllResponse.builder()
                 .basicProfileResponses(basicProfileResponses)
                 .favoriteListCount(favoriteListCount)
                 .myFavoriteListResponses(myFavoriteListResponses)
+                .createdBoardCount(createdBoardListCount)
+                .createdBoardListResponses(createdBoardListResponses)
                 .build();
     }
 
