@@ -11,6 +11,7 @@ import java.util.List;
 public class BoardDetailResponse {
 
     private Long boardId;
+    private String image;
     private String department;
     private String name;
     private LocalDateTime createDate;
@@ -24,6 +25,7 @@ public class BoardDetailResponse {
 
     @Builder
     public BoardDetailResponse(Long boardId,
+                               String image,
                                String department,
                                String name,
                                LocalDateTime createDate,
@@ -35,6 +37,7 @@ public class BoardDetailResponse {
                                Integer favoriteCount,
                                Integer chatCount) {
         this.boardId = boardId;
+        this.image = image;
         this.department = department;
         this.name = name;
         this.createDate = createDate;

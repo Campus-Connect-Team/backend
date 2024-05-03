@@ -97,6 +97,7 @@ public class BoardService {
 
         return BoardDetailResponse.builder()
                 .boardId(findBoard.getId())
+                .image(findBoard.getUser().getImage())
                 .department(findBoard.getUser().getDepartment())
                 .name(findBoard.getUser().getName())
                 .createDate(findBoard.getCreatedDate())
