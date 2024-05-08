@@ -6,6 +6,9 @@ import com.campusconnect.backend.board.domain.Board;
 import com.campusconnect.backend.board.repository.BoardRepository;
 import com.campusconnect.backend.board.service.BoardService;
 import com.campusconnect.backend.config.aws.S3Uploader;
+import com.campusconnect.backend.config.redis.CacheKey;
+import com.campusconnect.backend.config.redis.CacheNames;
+import com.campusconnect.backend.config.redis.RedisRepository;
 import com.campusconnect.backend.favorite.domain.Favorite;
 import com.campusconnect.backend.favorite.repository.FavoriteRepository;
 import com.campusconnect.backend.user.domain.User;
@@ -15,12 +18,14 @@ import com.campusconnect.backend.user.dto.response.*;
 import com.campusconnect.backend.user.repository.UserRepository;
 import com.campusconnect.backend.util.exception.CustomException;
 import com.campusconnect.backend.util.exception.ErrorCode;
-import com.campusconnect.backend.util.jwt.JwtProvider;
+import com.campusconnect.backend.util.jwt.*;
 import com.campusconnect.backend.util.validator.PasswordMatchesValidator;
 import com.campusconnect.backend.util.validator.PasswordMatchesValidatorForAccountWithdrawal;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -30,6 +35,8 @@ import org.springframework.web.multipart.MultipartFile;
 import java.io.IOException;
 import java.util.Collections;
 import java.util.List;
+import java.util.Objects;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 @Service
@@ -40,13 +47,17 @@ public class UserService {
 
     private final AuthenticationRepository authenticationRepository;
     private final UserRepository userRepository;
+    private final RedisRepository redisRepository;
     private final BoardRepository boardRepository;
     private final FavoriteRepository favoriteRepository;
+    private final RefreshTokenRedisRepository refreshTokenRedisRepository;
+    private final LogoutAccessTokenRedisRepository logoutAccessTokenRedisRepository;
     private final BoardService boardService;
     private final PasswordEncoder passwordEncoder;
     private final PasswordMatchesValidator passwordMatchesValidator;
     private final PasswordMatchesValidatorForAccountWithdrawal passwordMatchesValidatorForAccountWithdrawal;
     private final JwtProvider jwtProvider;
+    private final RedisTemplate redisTemplate;
     private final S3Uploader s3Uploader;
     private final AmazonS3Client amazonS3Client;
 
@@ -56,7 +67,8 @@ public class UserService {
     @Value("${jwt.secret-key}")
     private String secretKey;
 
-    private Long expiredMs = 1000 * 60 * 10L;
+    private static final Long accessTokenExpiredMs = 1000 * 60 * 30L;  // 30 Minutes
+    private static final Long refreshTokenExpiredMs = 1000 * 60 * 2L;  // 2 minutes
 
     @Transactional
     public User createUser(UserSignUpRequest userSignUpRequest, MultipartFile multipartFile) throws IOException {
@@ -131,6 +143,7 @@ public class UserService {
     }
 
     /** 로그인 처리 */
+    @Transactional
     public UserLoginResponse login(UserLoginRequest userLoginRequest) {
 
         User findUser = userRepository.findByStudentNumber(userLoginRequest.getStudentNumber())
@@ -146,8 +159,69 @@ public class UserService {
             throw new CustomException(ErrorCode.FAIL_LOGIN);
         }
 
-        String token = jwtProvider.createToken(studentNumber, secretKey, expiredMs);
-        return new UserLoginResponse(findUser.getStudentNumber(), token, expiredMs);
+        String accessToken = jwtProvider.createAccessToken(studentNumber, secretKey, accessTokenExpiredMs);
+        String refreshToken = jwtProvider.createRefreshToken(studentNumber, secretKey, refreshTokenExpiredMs);
+        saveRefreshToken(studentNumber, refreshToken);
+
+        return UserLoginResponse.builder()
+                .studentNumber(studentNumber)
+                .responseCode(ErrorCode.SUCCESS_LOGIN.getDescription())
+                .accessToken(accessToken)
+                .refreshToken(refreshToken)
+                .build();
+    }
+
+    // 로그인 시 Refresh Token을 저장
+    private void saveRefreshToken(String studentNumber, String refreshToken) {
+        refreshTokenRedisRepository.save(RefreshToken.builder()
+                .studentNumber(studentNumber)
+                .refreshToken(refreshToken)
+                .remainingMilliSeconds(refreshTokenExpiredMs)
+                .build());
+    }
+
+    /** 로그아웃 처리 */
+    @Transactional
+    @CacheEvict(value = CacheKey.STUDENT_NUMBER, key = "#studentNumber")
+    public UserLogoutResponse logout(String accessToken, String refreshToken, String studentNumber) {
+        Long expirationMs = jwtProvider.getAccessTokenExpiredMs(accessToken);
+        refreshTokenRedisRepository.deleteById(studentNumber);
+        saveLogoutAccessToken(accessToken, studentNumber, expirationMs);
+
+        return UserLogoutResponse.builder()
+                .studentNumber(studentNumber)
+                .responseCode(ErrorCode.SUCCESS_LOGOUT.getDescription())
+                .build();
+    }
+
+    // 로그아웃 시 이전 Access Token으로 로그인하지 못하도록 처리
+    private void saveLogoutAccessToken(String accessToken, String studentNumber, Long expirationMs) {
+        logoutAccessTokenRedisRepository.save(LogoutAccessToken.builder()
+                        .accessToken(accessToken)
+                        .studentNumber(studentNumber)
+                        .remainingMilliSeconds(expirationMs)
+                .build());
+    }
+
+    /** Access Token 만료 시, Refresh Token을 통해 Access Token 재발급 */
+    @Transactional
+    public UserReissueResponse reissue(String accessToken, String refreshToken) {
+        String studentNumber = jwtProvider.getStudentNumber(accessToken, secretKey);
+
+        if (jwtProvider.isRefreshTokenExpired(refreshToken)) {
+            throw new CustomException(ErrorCode.EXPIRED_OR_NOT_EXISTED_REFRESH_TOKEN);
+        }
+
+        if (!refreshTokenRedisRepository.existsById(studentNumber)) {
+            throw new CustomException(ErrorCode.NOT_EXISTED_REFRESH_TOKEN);
+        }
+
+        String newAccessToken = jwtProvider.createAccessToken(studentNumber, secretKey, accessTokenExpiredMs);
+        return UserReissueResponse.builder()
+                .accessToken(newAccessToken)
+                .refreshToken(refreshToken)
+                .responseCode(ErrorCode.SUCCESS_REISSUE_ACCESS_TOKEN.getDescription())
+                .build();
     }
 
     /** 마이 페이지 조회 */

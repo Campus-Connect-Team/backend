@@ -42,8 +42,9 @@ public class WebSecurityConfig {
                 .authorizeHttpRequests(authorizeRequest -> authorizeRequest
                                 .requestMatchers(
                                         "/",
-                                        "/users/log-in",
+                                        "/users/log-in/**",
                                         "/users/sign-up/**",
+                                        "/users/log-out",
                                         "/swagger-ui/index.html",
                                         "/v3/api-docs/**",
                                         "/h2-console/**",
@@ -67,13 +68,14 @@ public class WebSecurityConfig {
 //                        .usernameParameter("studentNumber")
 //                        .passwordParameter("password")
 //                )
+//
+//                .logout(customizer -> customizer
+//                        .logoutUrl("/users/log-out").permitAll()
+//                        .logoutSuccessUrl("/")
+//                        .invalidateHttpSession(true)
+//                        .deleteCookies("JSESSIONID")
+//                )
 
-                .logout(customizer -> customizer
-                        .logoutUrl("/users/log-out").permitAll()
-                        .logoutSuccessUrl("/")
-                        .invalidateHttpSession(true)
-                        .deleteCookies("JSESSIONID")
-                )
                 .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class)
                 .build();
     }

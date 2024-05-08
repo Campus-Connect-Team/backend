@@ -9,10 +9,13 @@ import com.campusconnect.backend.user.service.UserService;
 import com.campusconnect.backend.util.email.service.EmailService;
 import com.campusconnect.backend.util.exception.ErrorCode;
 import com.campusconnect.backend.util.exception.ErrorResponse;
+import com.campusconnect.backend.util.jwt.JwtProvider;
 import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -28,7 +31,11 @@ public class UserController {
 
     private final UserService userService;
     private final EmailService emailService;
+    private final JwtProvider jwtProvider;
     private final S3Uploader s3Uploader;
+
+    @Value("${jwt.secret-key}")
+    private String secretKey;
 
     @PostMapping(value = "/users/sign-up", consumes = {MediaType.MULTIPART_FORM_DATA_VALUE})
     public User createUser(HttpServletRequest request,
@@ -58,6 +65,23 @@ public class UserController {
         userService.login(userLoginRequest);
         return ResponseEntity.status(ErrorCode.SUCCESS_LOGIN.getHttpStatus().value())
                 .body(userService.login(userLoginRequest));
+    }
+
+    /** 로그아웃 처리 */
+    @PostMapping("/users/log-out")
+    public ResponseEntity<UserLogoutResponse> logout(HttpServletRequest request, 
+                                                     @RequestHeader("Authorization") String accessToken,
+                                                     @RequestHeader("RefreshToken") String refreshToken) {
+        String studentNumber = jwtProvider.getStudentNumber(accessToken, secretKey);
+        return ResponseEntity.status(HttpStatus.OK)
+                .body(userService.logout(accessToken, refreshToken, studentNumber));
+    }
+
+    /** Access Token 만료 시, Refresh Token을 통해 Access Token 재발급 */
+    @PostMapping("/users/log-in/reissue")
+    public ResponseEntity<UserReissueResponse> reissue(@RequestHeader("Authorization") String accessToken, @RequestHeader("RefreshToken") String refreshToken) {
+        return ResponseEntity.status(HttpStatus.OK)
+                .body(userService.reissue(accessToken, refreshToken));
     }
 
     @GetMapping("/users/sign-up/studentNumber-duplicate-validation")

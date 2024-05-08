@@ -1,6 +1,7 @@
 package com.campusconnect.backend.config.web;
 
 import com.campusconnect.backend.user.service.UserService;
+import com.campusconnect.backend.util.exception.CustomException;
 import com.campusconnect.backend.util.exception.ErrorCode;
 import com.campusconnect.backend.util.exception.ErrorResponse;
 import com.campusconnect.backend.util.jwt.JwtProvider;
@@ -14,6 +15,7 @@ import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -22,6 +24,7 @@ import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
 import org.springframework.stereotype.Component;
+import org.springframework.util.StringUtils;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
@@ -33,6 +36,7 @@ import java.util.List;
 public class JwtFilter extends OncePerRequestFilter {
 
     private final UserService userService;
+    private final RedisTemplate redisTemplate;
     private final JwtProvider jwtProvider;
 
     @Value("${jwt.secret-key}")
@@ -48,14 +52,14 @@ public class JwtFilter extends OncePerRequestFilter {
             final String authorization = request.getHeader(HttpHeaders.AUTHORIZATION);
             log.info("authorization = {}", authorization);
 
-            if (authorization == null || !authorization.startsWith("Bearer ")) {
+            if (authorization == null || authorization.isEmpty()) {
                 log.error("authorization이 존재하지 않습니다.");
                 filterChain.doFilter(request, response);
                 return;
             }
 
             // Token을 꺼낸다.
-            String token = authorization.split(" ")[1];
+            String token = authorization;
 
             // Token이 만료되었는지 검증한다.
             if (jwtProvider.isExpired(token, secretKey)) {
@@ -95,5 +99,13 @@ public class JwtFilter extends OncePerRequestFilter {
         response.setStatus(HttpStatus.UNAUTHORIZED.value());
         response.setContentType(MediaType.APPLICATION_JSON_VALUE);
         response.getWriter().write(jsonErrorReponse);
+    }
+
+    private void validateAccessTokenStatus(String accessToken) {
+        // Redis에 있는 엑세스 토큰인 경우 로그아웃 처리된 엑세스 토큰
+        String expiredAccessToken = String.valueOf(redisTemplate.opsForValue().get(accessToken));
+        if (StringUtils.hasText(expiredAccessToken)) {
+            throw new CustomException(ErrorCode.LOGGED_OUT_ACCESS_TOKEN);
+        }
     }
 }
