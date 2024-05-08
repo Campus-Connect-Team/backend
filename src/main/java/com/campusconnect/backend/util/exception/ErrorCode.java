@@ -19,24 +19,32 @@ public enum ErrorCode {
     UNAUTHORIZED_CLIENT(HttpStatus.BAD_REQUEST,"AUTHORIZATION-001", "접근 토큰이 없습니다."),
     FORBIDDEN_CLIENT(HttpStatus.FORBIDDEN, "AUTHORIZATION-002","접근 권한이 없습니다."),
     EXPIRED_TOKEN(HttpStatus.UNAUTHORIZED, "AUTHORIZATION-003","만료된 토큰입니다."),
-    JWT_DECODE_FAIL(HttpStatus.UNAUTHORIZED, "AUTHORIZATION-004","올바른 토큰이 필요합니다."),
-    JWT_SIGNATURE_FAIL(HttpStatus.UNAUTHORIZED, "AUTHORIZATION-005","올바른 토큰이 필요합니다."),
+    EXPIRED_OR_NOT_EXISTED_REFRESH_TOKEN(HttpStatus.UNAUTHORIZED, "AUTHORIZATION-004","Refresh Token이 존재하지 않거나 만료되어 클라이언트의 재로그인이 필요합니다."),
+    INVALID_REFRESH_TOKEN(HttpStatus.UNAUTHORIZED, "AUTHORIZATION-005","클라이언트로부터 넘겨받은 Refresh Token이 유효하지 않습니다."),
+    JWT_DECODE_FAIL(HttpStatus.UNAUTHORIZED, "AUTHORIZATION-006","올바른 토큰이 필요합니다."),
+    JWT_SIGNATURE_FAIL(HttpStatus.UNAUTHORIZED, "AUTHORIZATION-007","올바른 토큰이 필요합니다."),
 
 
     // 회원 도메인 : 회원가입 - 처리 가능한 요청에 대한 Response Status Code
     AVAILABLE_STUDENT_NUMBER(HttpStatus.OK, "USER-006", "가입 가능한 학번입니다."),
     AVAILABLE_EMAIL(HttpStatus.OK, "USER-007", "가입 가능한 이메일입니다."),
     MATCH_AUTHENTICATION_CODE(HttpStatus.OK, "USER-008", "인증코드가 일치합니다."),
+    SUCCESS_REISSUE_ACCESS_TOKEN(HttpStatus.OK, "USER-009", "새로운 Access Token이 발급되었습니다."),
 
 
     // 회원 도메인 : 로그인, 로그아웃
     FAIL_LOGIN(HttpStatus.UNAUTHORIZED, "USER-009", "로그인에 실패했습니다. 학번 또는 비밀번호가 정확한지 확인해 주세요."),
     NOT_FOUND_USER(HttpStatus.NOT_FOUND, "USER-010",  "해당 학번으로 회원 정보가 존재하지 않습니다."),
     NOT_PUBLISH_TOKEN(HttpStatus.BAD_REQUEST, "USER-011", "토큰이 발행되지 않았습니다."),
+    LOGGED_OUT_ACCESS_TOKEN(HttpStatus.UNAUTHORIZED, "USER-012", "이미 로그아웃 처리된 Access Token입니다."),
+    NOT_EXISTED_REFRESH_TOKEN(HttpStatus.UNAUTHORIZED, "USER-013", "해당 사용자(학번)로 Refresh Token이 존재하지 않습니다"),
+
 
 
     // 회원 도메인 : 로그인, 로그아웃  - 처리 가능한 요청에 대한 Response Status Code
-    SUCCESS_LOGIN(HttpStatus.OK, "USER-012", "로그인 처리되었습니다."),
+    SUCCESS_LOGIN(HttpStatus.OK, "USER-013", "서비스에 로그인되었습니다."),
+    SUCCESS_TOKEN_REISSUE(HttpStatus.OK, "USER-014", "토큰이 재발급되었습니다."),
+    SUCCESS_LOGOUT(HttpStatus.OK, "USER-015", "서비스에서 로그아웃되었습니다."),
 
 
 
@@ -44,7 +52,6 @@ public enum ErrorCode {
     NOT_MATCHED_CURRENT_PASSWORD(HttpStatus.BAD_REQUEST, "USER-013", "현재 비밀번호가 일치하지 않습니다."),
     NOT_MATCHED_CHECK_CURRENT_PASSWORD(HttpStatus.BAD_REQUEST, "USER-014", "입력하신 현재 비밀번호와 일치하지 않습니다."),
     NOT_MATCHED_EDIT_PASSWORD(HttpStatus.BAD_REQUEST, "USER-015", "변경할 비밀번호가 일치하지 않습니다."),
-
 
 
     // 회원 도메인 : 마이 페이지 - 처리 가능한 요청에 대한 Response Status Code
