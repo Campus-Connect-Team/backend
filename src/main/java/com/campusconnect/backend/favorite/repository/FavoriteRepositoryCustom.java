@@ -17,4 +17,7 @@ public interface FavoriteRepositoryCustom {
 
     // 특정 유저의 관심 상품 리스트 조회
     List<Favorite> findUserFavoriteList(String studentNumber);
+
+    // 본인의 관심 게시글 내역 삭제
+    List<Long> deleteMyCheckedFavoritesAndGetRelatedToBoardIds(Long userId);
 }

@@ -38,26 +38,27 @@ public enum ErrorCode {
     NOT_PUBLISH_TOKEN(HttpStatus.BAD_REQUEST, "USER-011", "토큰이 발행되지 않았습니다."),
     LOGGED_OUT_ACCESS_TOKEN(HttpStatus.UNAUTHORIZED, "USER-012", "이미 로그아웃 처리된 Access Token입니다."),
     NOT_EXISTED_REFRESH_TOKEN(HttpStatus.UNAUTHORIZED, "USER-013", "해당 사용자(학번)로 Refresh Token이 존재하지 않습니다"),
+    NOT_EXISTED_ACCESS_GRANT(HttpStatus.UNAUTHORIZED, "USER-014", "로그아웃하셨거나, 로그인하지 않아 서비스 접근 권한이 없습니다."),
 
 
 
     // 회원 도메인 : 로그인, 로그아웃  - 처리 가능한 요청에 대한 Response Status Code
-    SUCCESS_LOGIN(HttpStatus.OK, "USER-013", "서비스에 로그인되었습니다."),
-    SUCCESS_TOKEN_REISSUE(HttpStatus.OK, "USER-014", "토큰이 재발급되었습니다."),
-    SUCCESS_LOGOUT(HttpStatus.OK, "USER-015", "서비스에서 로그아웃되었습니다."),
+    SUCCESS_LOGIN(HttpStatus.OK, "USER-015", "서비스에 로그인되었습니다."),
+    SUCCESS_TOKEN_REISSUE(HttpStatus.OK, "USER-016", "토큰이 재발급되었습니다."),
+    SUCCESS_LOGOUT(HttpStatus.OK, "USER-017", "서비스에서 로그아웃되었습니다."),
 
 
 
     // 회원 도메인 : 마이 페이지
-    NOT_MATCHED_CURRENT_PASSWORD(HttpStatus.BAD_REQUEST, "USER-013", "현재 비밀번호가 일치하지 않습니다."),
-    NOT_MATCHED_CHECK_CURRENT_PASSWORD(HttpStatus.BAD_REQUEST, "USER-014", "입력하신 현재 비밀번호와 일치하지 않습니다."),
-    NOT_MATCHED_EDIT_PASSWORD(HttpStatus.BAD_REQUEST, "USER-015", "변경할 비밀번호가 일치하지 않습니다."),
+    NOT_MATCHED_CURRENT_PASSWORD(HttpStatus.BAD_REQUEST, "MY_PAGE-001", "현재 비밀번호가 일치하지 않습니다."),
+    NOT_MATCHED_CHECK_CURRENT_PASSWORD(HttpStatus.BAD_REQUEST, "MY_PAGE-002", "입력하신 현재 비밀번호와 일치하지 않습니다."),
+    NOT_MATCHED_EDIT_PASSWORD(HttpStatus.BAD_REQUEST, "MY_PAGE-003", "변경할 비밀번호가 일치하지 않습니다."),
 
 
     // 회원 도메인 : 마이 페이지 - 처리 가능한 요청에 대한 Response Status Code
-    SUCCESS_EDIT_MY_BASIC_PROFILE(HttpStatus.OK, "USER-016", "기본 프로필 수정이 완료되었습니다."),
-    SUCCESS_UPDATE_PASSWORD(HttpStatus.OK, "USER-017", "비밀번호가 변경되었습니다."),
-    SUCCESS_WITHDRAWAL_USER(HttpStatus.OK, "USER-018", "회원 탈퇴가 완료되었습니다."),
+    SUCCESS_EDIT_MY_BASIC_PROFILE(HttpStatus.OK, "MY_PAGE-004", "기본 프로필 수정이 완료되었습니다."),
+    SUCCESS_UPDATE_PASSWORD(HttpStatus.OK, "MY_PAGE-005", "비밀번호가 변경되었습니다."),
+    SUCCESS_WITHDRAWAL_USER(HttpStatus.OK, "MY_PAGE-006", "회원 탈퇴가 완료되었습니다."),
 
 
 

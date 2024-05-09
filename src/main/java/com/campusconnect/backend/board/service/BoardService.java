@@ -52,16 +52,16 @@ public class BoardService {
 
         if (multipartFiles == null) {
             throw new CustomException(ErrorCode.NOT_FOUND_BOARD_IMAGES);
-        } else {
-            for (MultipartFile file : multipartFiles) {
-                String imageName = s3Uploader.upload(file, "board");
-                boardImageNames.add(imageName);
-            }
         }
 
         // 업로드한 게시글 이미지 수를 초과했다면 게시글을 등록할 수 없다.
         if (multipartFiles.size() > 10) {
             throw new CustomException(ErrorCode.EXCEEDED_LIMIT_BOARD_IMAGES);
+        } else {
+            for (MultipartFile file : multipartFiles) {
+                String imageName = s3Uploader.upload(file, "board");
+                boardImageNames.add(imageName);
+            }
         }
 
         Board board = Board.builder()
@@ -181,50 +181,41 @@ public class BoardService {
         findBoard.updateTitle(boardUpdateRequest.getTitle());
         findBoard.updateContent(boardUpdateRequest.getContent());
 
-        // 새로운 사진 추가 및 기존 사진 삭제
-//        updateImages(findBoard, boardUpdateRequest.getDeletedImages(), multipartFiles);
-
         // 수정 페이지에서 거래 완료로 변경하는 경우
         String tradeStatus = boardUpdateRequest.getTradeStatus();
         findBoard.changeTradeStatus(tradeStatus);
+
+        // 게시글 업로드 사진 변경
+        updateBoardImages(multipartFiles, findBoard);
     }
-//    private void updateImages(Board board,
-//                              List<Long> deletedImageIds,
-//                              List<MultipartFile> multipartFiles) throws IOException {
-//        List<BoardImage> updatedImages = new ArrayList<>();
-//
-//        if (deletedImageIds != null) {
-//            // 기존 이미지 삭제
-//            for (BoardImage existingImage : board.getBoardImagesToBoardImageType()) {
-//                if (!deletedImageIds.contains(existingImage.getId())) {
-//                    updatedImages.add(existingImage);
-//                } else {
-//                    // S3에서 이미지 삭제
-//                    s3Uploader.delete(existingImage.getBoardImage());
-//                }
-//            }
-//        }
-//
-//        // 새로운 이미지 추가
-//        int remainingImageSlots = 10 - updatedImages.size();
-//
-//        if (multipartFiles != null) {
-//            for (MultipartFile file : multipartFiles) {
-//                if (remainingImageSlots <= 0) {
-//                    throw new CustomException(ErrorCode.EXCEEDED_LIMIT_BOARD_IMAGES);
-//                }
-//                String fileName = s3Uploader.upload(file, "static");
-//                updatedImages.add(new BoardImage(board, fileName));
-//                remainingImageSlots--;
-//            }
-//        }
-//
-//
 
-//        // 기존 이미지 업데이트
-//        board.updateBoardImages(updatedImages);
+    private void updateBoardImages(List<MultipartFile> multipartFiles, Board findBoard) throws IOException {
+        if (multipartFiles == null || multipartFiles.isEmpty()) {
+            throw new CustomException(ErrorCode.NOT_FOUND_BOARD_IMAGES);
+        }
 
-//    }
+        if (multipartFiles.size() > 10) {
+            throw new CustomException(ErrorCode.EXCEEDED_LIMIT_BOARD_IMAGES);
+        }
+
+        // 기존 이미지를 DB에서 삭제 후 S3 Bucket에서도 삭제
+        List<String> boardImages = findBoard.getBoardImages();
+        for (String boardImage : boardImages) {
+            String realBoardImage = boardImage.replace("https://campus-connect-backend.s3.ap-northeast-2.amazonaws.com/board/", "");
+            s3Uploader.deleteToBoardImage(realBoardImage);
+        }
+        boardImageRepository.deleteAllByBoardId(findBoard.getId());
+
+        List<BoardImage> boardImageNames = new ArrayList<>();
+        for (MultipartFile file : multipartFiles) {
+            String updateBoardImage = s3Uploader.upload(file, "board");
+            BoardImage boardImage = new BoardImage();
+            boardImage.updateImageUrl(updateBoardImage);
+            boardImage.assignBoardId(findBoard);
+            boardImageNames.add(boardImage);
+        }
+        boardImageRepository.saveAll(boardImageNames);
+    }
 
     /** 관심 상품으로 등록 */
     @Transactional
@@ -269,6 +260,7 @@ public class BoardService {
         findBoard.checkToBoardDeleteWithTradeStatus();
 
         deleteFromS3Bucket(findBoard);
+        boardImageRepository.deleteAllByBoardId(findBoard.getId());
         boardRepository.delete(findBoard);
 
         // 게시글 삭제 시 해당 게시글과 관련된 관심 게시글 내역도 모두 삭제
@@ -279,6 +271,11 @@ public class BoardService {
                 .title(findBoard.getTitle())
                 .errorCode(ErrorCode.SUCCESS_BOARD_DELETE.getDescription())
                 .build();
+    }
+
+    /** 회원 탈퇴 시 모든 게시글 삭제 */
+    public void deleteAllBoard(Long id) {
+        boardRepository.deleteByUserId(id);
     }
 
     public void deleteFromS3Bucket(Board findBoard) {
