@@ -20,6 +20,7 @@ import org.springframework.util.StringUtils;
 import java.security.Key;
 import java.util.Base64;
 import java.util.Date;
+import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 
 @Component
@@ -29,6 +30,7 @@ public class JwtProvider {
 
     private final RedisConfig redisConfig;
     private final RedisRepository redisRepository;
+    private final LogoutAccessTokenRedisRepository logoutAccessTokenRedisRepository;
     private static final Long accessTokenExpiredMs = 1000 * 60 * 30L;  // 30 Minutes
     private static final Long refreshTokenExpiredMs = 1000 * 60L;  // 1 Days
 
@@ -68,11 +70,29 @@ public class JwtProvider {
         byte[] decodeSecretKey = Base64.getDecoder().decode(secretKey);
         Key key = Keys.hmacShaKeyFor(decodeSecretKey);
 
-        return Jwts.parser()
-                .setSigningKey(key)
-                .parseClaimsJws(token)
-                .getBody()
-                .get("studentNumber", String.class);
+        try {
+            Claims claims = Jwts.parser()
+                    .setSigningKey(key)
+                    .parseClaimsJws(token)
+                    .getBody();
+
+            return claims.get("studentNumber", String.class);
+
+        } catch (RuntimeException exception) {
+            Optional<LogoutAccessToken> logoutAccessTokenOptional = logoutAccessTokenRedisRepository.findById(token);
+            if (logoutAccessTokenOptional.isPresent()) {
+                LogoutAccessToken logoutAccessToken = logoutAccessTokenOptional.get();
+                return logoutAccessToken.getStudentNumber(); // 토큰 값에 대한 payload에서 studentNumber 조회
+            } else {
+                return null;
+            }
+        }
+
+//        return Jwts.parser()
+//                .setSigningKey(key)
+//                .parseClaimsJws(token)
+//                .getBody()
+//                .get("studentNumber", String.class);
     }
 
     // 토큰 만료 여부를 확인한다.

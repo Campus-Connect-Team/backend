@@ -9,4 +9,7 @@ public interface BoardRepository extends JpaRepository<Board, Long>, BoardReposi
 
     // 페이징 처리
     Page<Board> findAll(Pageable pageable);
+
+    // 회원 탈퇴 - 특정 유저가 작성한 게시글 모두 삭제
+    void deleteByUserId(Long userId);
 }

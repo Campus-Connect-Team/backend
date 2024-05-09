@@ -5,6 +5,7 @@ import com.campusconnect.backend.util.exception.CustomException;
 import com.campusconnect.backend.util.exception.ErrorCode;
 import com.campusconnect.backend.util.exception.ErrorResponse;
 import com.campusconnect.backend.util.jwt.JwtProvider;
+import com.campusconnect.backend.util.jwt.LogoutAccessTokenRedisRepository;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.jsonwebtoken.ExpiredJwtException;
 import io.jsonwebtoken.MalformedJwtException;
@@ -24,7 +25,6 @@ import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
 import org.springframework.stereotype.Component;
-import org.springframework.util.StringUtils;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
@@ -38,6 +38,7 @@ public class JwtFilter extends OncePerRequestFilter {
     private final UserService userService;
     private final RedisTemplate redisTemplate;
     private final JwtProvider jwtProvider;
+    private final LogoutAccessTokenRedisRepository logoutAccessTokenRedisRepository;
 
     @Value("${jwt.secret-key}")
     private String secretKey;
@@ -49,17 +50,17 @@ public class JwtFilter extends OncePerRequestFilter {
 
         try {
             // Token이 존재하지 않는 경우 권한을 Block한다.
-            final String authorization = request.getHeader(HttpHeaders.AUTHORIZATION);
-            log.info("authorization = {}", authorization);
+            final String accessToken = request.getHeader(HttpHeaders.AUTHORIZATION);
+            log.info("accessToken = {}", accessToken);
 
-            if (authorization == null || authorization.isEmpty()) {
-                log.error("authorization이 존재하지 않습니다.");
+            if (accessToken == null || accessToken.isEmpty()) {
+                log.error("accessToken 존재하지 않습니다.");
                 filterChain.doFilter(request, response);
                 return;
             }
 
             // Token을 꺼낸다.
-            String token = authorization;
+            String token = accessToken;
 
             // Token이 만료되었는지 검증한다.
             if (jwtProvider.isExpired(token, secretKey)) {
@@ -67,6 +68,9 @@ public class JwtFilter extends OncePerRequestFilter {
                 filterChain.doFilter(request, response);
                 return;
             }
+
+            // 로그아웃된 상태인지 확인
+            validateAccessTokenStatus(token);
 
             // 학번 정보를 Token에서 가져온다.
             String studentNumber = "";
@@ -85,7 +89,7 @@ public class JwtFilter extends OncePerRequestFilter {
             ErrorResponse errorResponse = new ErrorResponse(ErrorCode.EXPIRED_TOKEN);
             sendErrorRelatedToken(response, errorResponse);
         } catch (MalformedJwtException exception) {
-            ErrorResponse errorResponse = new ErrorResponse(ErrorCode.JWT_SIGNATURE_FAIL);
+            ErrorResponse errorResponse = new ErrorResponse(ErrorCode.NOT_EXISTED_ACCESS_GRANT);
             sendErrorRelatedToken(response, errorResponse);
         }
 
@@ -93,18 +97,17 @@ public class JwtFilter extends OncePerRequestFilter {
 
     private void sendErrorRelatedToken(HttpServletResponse response, ErrorResponse errorResponse) throws IOException {
         ObjectMapper objectMapper = new ObjectMapper();
-        String jsonErrorReponse = objectMapper.writeValueAsString(errorResponse);
+        String jsonErrorResponse = objectMapper.writeValueAsString(errorResponse);
 
         response.setCharacterEncoding("utf-8");
         response.setStatus(HttpStatus.UNAUTHORIZED.value());
         response.setContentType(MediaType.APPLICATION_JSON_VALUE);
-        response.getWriter().write(jsonErrorReponse);
+        response.getWriter().write(jsonErrorResponse);
     }
 
     private void validateAccessTokenStatus(String accessToken) {
         // Redis에 있는 엑세스 토큰인 경우 로그아웃 처리된 엑세스 토큰
-        String expiredAccessToken = String.valueOf(redisTemplate.opsForValue().get(accessToken));
-        if (StringUtils.hasText(expiredAccessToken)) {
+        if (logoutAccessTokenRedisRepository.existsById(accessToken)) {
             throw new CustomException(ErrorCode.LOGGED_OUT_ACCESS_TOKEN);
         }
     }

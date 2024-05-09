@@ -35,4 +35,14 @@ public class BoardImage {
     public String getFileName() {
         return this.boardImage;
     }
+
+    /**  게시글 수정 : 이미지 수정 */
+    public void updateImageUrl(String updateBoardImage) {
+        this.boardImage = updateBoardImage;
+    }
+
+    /**  게시글 수정 : 이미지 수정 이미지 엔티티에 대해 Board ID를 지정한다. */
+    public void assignBoardId(Board board) {
+        this.board = board;
+    }
 }

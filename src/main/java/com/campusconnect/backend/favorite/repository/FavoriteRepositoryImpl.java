@@ -60,4 +60,23 @@ public class FavoriteRepositoryImpl implements FavoriteRepositoryCustom {
                 .where(favorite.user.studentNumber.eq(studentNumber))
                 .fetch();
     }
+
+    // 본인의 관심 게시글 내역 삭제
+    @Override
+    public List<Long> deleteMyCheckedFavoritesAndGetRelatedToBoardIds(Long userId) {
+        // 삭제되기 전에 삭제될 favorite 튜플의 board ID 가져오기
+        List<Long> deletedBoardIds = queryFactory
+                .select(favorite.board.id)
+                .from(favorite)
+                .where(favorite.user.id.eq(userId))
+                .fetch();
+
+        // 해당 사용자가 관심으로 등록한 favorite 튜플 삭제
+        queryFactory
+                .delete(favorite)
+                .where(favorite.user.id.eq(userId))
+                .execute();
+
+        return deletedBoardIds;
+    }
 }

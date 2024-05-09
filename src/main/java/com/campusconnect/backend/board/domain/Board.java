@@ -1,7 +1,6 @@
 package com.campusconnect.backend.board.domain;
 
 import com.campusconnect.backend.basetime.BaseTimeEntity;
-import com.campusconnect.backend.favorite.domain.Favorite;
 import com.campusconnect.backend.user.domain.User;
 import com.campusconnect.backend.util.exception.CustomException;
 import com.campusconnect.backend.util.exception.ErrorCode;
@@ -13,7 +12,6 @@ import lombok.NoArgsConstructor;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.function.Function;
 import java.util.stream.Collectors;
 
 @Entity
@@ -30,7 +28,7 @@ public class Board extends BaseTimeEntity {
     @JoinColumn(name = "users_id")
     private User user;
 
-    @OneToMany(mappedBy = "board", cascade = CascadeType.ALL, orphanRemoval = true)
+    @OneToMany(mappedBy = "board")
     private List<BoardImage> boardImage;
 
     @Column(name = "title", nullable = false, length = 100)

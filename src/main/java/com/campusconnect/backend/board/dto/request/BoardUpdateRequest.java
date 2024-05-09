@@ -18,6 +18,4 @@ public class BoardUpdateRequest {
     private String content;
 
     private String tradeStatus;
-
-    private List<Long> deletedImages;
 }

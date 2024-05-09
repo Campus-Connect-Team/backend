@@ -3,12 +3,11 @@ package com.campusconnect.backend.user.service;
 import com.amazonaws.services.s3.AmazonS3Client;
 import com.campusconnect.backend.authentication.repository.AuthenticationRepository;
 import com.campusconnect.backend.board.domain.Board;
+import com.campusconnect.backend.board.repository.BoardImageRepository;
 import com.campusconnect.backend.board.repository.BoardRepository;
 import com.campusconnect.backend.board.service.BoardService;
 import com.campusconnect.backend.config.aws.S3Uploader;
 import com.campusconnect.backend.config.redis.CacheKey;
-import com.campusconnect.backend.config.redis.CacheNames;
-import com.campusconnect.backend.config.redis.RedisRepository;
 import com.campusconnect.backend.favorite.domain.Favorite;
 import com.campusconnect.backend.favorite.repository.FavoriteRepository;
 import com.campusconnect.backend.user.domain.User;
@@ -35,8 +34,6 @@ import org.springframework.web.multipart.MultipartFile;
 import java.io.IOException;
 import java.util.Collections;
 import java.util.List;
-import java.util.Objects;
-import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 @Service
@@ -47,8 +44,8 @@ public class UserService {
 
     private final AuthenticationRepository authenticationRepository;
     private final UserRepository userRepository;
-    private final RedisRepository redisRepository;
     private final BoardRepository boardRepository;
+    private final BoardImageRepository boardImageRepository;
     private final FavoriteRepository favoriteRepository;
     private final RefreshTokenRedisRepository refreshTokenRedisRepository;
     private final LogoutAccessTokenRedisRepository logoutAccessTokenRedisRepository;
@@ -356,11 +353,28 @@ public class UserService {
 
         List<Board> boardList = boardRepository.findBoards(withdrawalUser.getId());
 
+        // 탈퇴 전 사용자 비밀번호 확인
         validateForAccountWithdrawal(userWithdrawalRequest, withdrawalUser);
+
+        // 본인의 관심 게시글 내역 삭제 후 관련된 게시글의 관심 수까지 최신화
+        List<Long> deleteMyCheckedFavoritesAndGetRelatedToBoardIds = favoriteRepository.deleteMyCheckedFavoritesAndGetRelatedToBoardIds(withdrawalUser.getId());
+        for (Long deleteMyCheckedFavoritesAndGetRelatedToBoardId : deleteMyCheckedFavoritesAndGetRelatedToBoardIds) {
+            Board findBoard = boardRepository.findById(deleteMyCheckedFavoritesAndGetRelatedToBoardId)
+                    .orElseThrow(() -> new CustomException(ErrorCode.NOT_FOUND_BOARD));
+            findBoard.decreaseFavoriteCount();
+        }
+
+        // 본인의 게시글 이미지, 게시글 삭제
+        boardService.deleteFromS3BucketToMultipleBoards(boardList);
+        for (Board board : boardList) {
+            boardImageRepository.deleteAllByBoardId(board.getId());
+        }
+        boardService.deleteAllBoard(withdrawalUser.getId());
+
+        // 회원 정보 삭제
         userRepository.delete(withdrawalUser);
         String userProfileImage = withdrawalUser.getImage().replace("https://campus-connect-backend.s3.ap-northeast-2.amazonaws.com/user/", "");
         s3Uploader.deleteToUserProfileImage(userProfileImage);
-        boardService.deleteFromS3BucketToMultipleBoards(boardList);
 
         return UserWithdrawalResponse.builder()
                 .userId(withdrawalUser.getId())
