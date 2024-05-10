@@ -39,9 +39,7 @@ public class BoardService {
     private final FavoriteService favoriteService;
     private final S3Uploader s3Uploader;
 
-    /**
-     * 판매 게시글 작성
-     */
+    /** 판매 게시글 작성 */
     @Transactional
     public BoardCreateResponse createBoard(BoardCreateRequest boardCreateRequest, List<MultipartFile> multipartFiles) throws IOException {
         User foundUser = userRepository.findByStudentNumber(boardCreateRequest.getStudentNumber())
@@ -85,12 +83,11 @@ public class BoardService {
                 .boardId(board.getId())
                 .studentNumber(foundUser.getStudentNumber())
                 .title(board.getTitle())
+                .responseCode(ErrorCode.SUCCESS_BOARD_CREATION.getDescription())
                 .build();
     }
 
-    /**
-     * 특정 판매 게시글 조회 (게시글 상세 페이지)
-     */
+    /** 특정 판매 게시글 조회 (게시글 상세 페이지) */
     public BoardDetailResponse getBoardById(Long boardId) {
         Board findBoard = boardRepository.findById(boardId)
                 .orElseThrow(() -> new CustomException(ErrorCode.NOT_FOUND_BOARD));
@@ -111,9 +108,7 @@ public class BoardService {
                 .build();
     }
 
-    /**
-     * 게시글 전체(리스트) 조회
-     */
+    /** 게시글 전체(리스트) 조회 */
     public List<BoardListResponse> getBoardList() {
         return boardRepository.findAll().stream()
                 .map(board -> BoardListResponse.builder()
