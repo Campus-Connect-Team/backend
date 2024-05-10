@@ -15,6 +15,7 @@ import com.campusconnect.backend.user.domain.UserRole;
 import com.campusconnect.backend.user.dto.request.*;
 import com.campusconnect.backend.user.dto.response.*;
 import com.campusconnect.backend.user.repository.UserRepository;
+import com.campusconnect.backend.util.email.service.EmailService;
 import com.campusconnect.backend.util.exception.CustomException;
 import com.campusconnect.backend.util.exception.ErrorCode;
 import com.campusconnect.backend.util.jwt.*;
@@ -50,6 +51,7 @@ public class UserService {
     private final RefreshTokenRedisRepository refreshTokenRedisRepository;
     private final LogoutAccessTokenRedisRepository logoutAccessTokenRedisRepository;
     private final BoardService boardService;
+    private final EmailService emailService;
     private final PasswordEncoder passwordEncoder;
     private final PasswordMatchesValidator passwordMatchesValidator;
     private final PasswordMatchesValidatorForAccountWithdrawal passwordMatchesValidatorForAccountWithdrawal;
@@ -68,7 +70,7 @@ public class UserService {
     private static final Long refreshTokenExpiredMs = 1000 * 60 * 2L;  // 2 minutes
 
     @Transactional
-    public User createUser(UserSignUpRequest userSignUpRequest, MultipartFile multipartFile) throws IOException {
+    public UserSignUpResponse createUser(UserSignUpRequest userSignUpRequest, MultipartFile multipartFile) throws IOException {
         // 학번, 이메일 중복 검증
         checkDuplicationUser(userSignUpRequest.getStudentNumber());
         checkDuplicationEmail(userSignUpRequest.getEmail());
@@ -96,7 +98,15 @@ public class UserService {
 
         authenticationRepository.deleteAllByEmail(email);
         log.info(image);
-        return userRepository.save(user);
+        userRepository.save(user);
+
+        return UserSignUpResponse.builder()
+                .studentNumber(user.getStudentNumber())
+                .college(user.getCollege())
+                .department(user.getDepartment())
+                .name(user.getName())
+                .responseCode(ErrorCode.SUCCESS_SIGN_UP.getDescription())
+                .build();
     }
 
     /** 중복된 이메일인지 체크한다. */
@@ -219,6 +229,29 @@ public class UserService {
                 .refreshToken(refreshToken)
                 .responseCode(ErrorCode.SUCCESS_REISSUE_ACCESS_TOKEN.getDescription())
                 .build();
+    }
+
+    /** 로그인 페이지 - 비밀번호 찾기 */
+    @Transactional
+    public UserFindPasswordResponse findPassword(UserFindPasswordRequest userFindPasswordRequest) {
+        User findUser = userRepository.findByStudentNumber(userFindPasswordRequest.getStudentNumber())
+                .orElseThrow(() -> new CustomException(ErrorCode.NOT_FOUND_USER));
+
+        String temporalPassword = emailService.sendTemporalPassword(userFindPasswordRequest);
+        updateUserPasswordToTempPassword(findUser.getStudentNumber(), temporalPassword);
+
+        return UserFindPasswordResponse.builder()
+                .studentNumber(userFindPasswordRequest.getStudentNumber())
+                .responseCode(ErrorCode.SUCCESS_TEMPORAL_PASSWORD.getDescription())
+                .build();
+    }
+
+    /** 임시 비밀번호 메일 발송 후 해당 회원의 비밀번호를 임시 비밀번호로 변경 */
+    public void updateUserPasswordToTempPassword(String studentNumber, String temporalPassword) {
+        User findUser = userRepository.findByStudentNumber(studentNumber)
+                .orElseThrow(() -> new CustomException(ErrorCode.NOT_FOUND_USER));
+
+        findUser.updateCurrentPassword(passwordEncoder.encode(temporalPassword));
     }
 
     /** 마이 페이지 조회 */

@@ -30,6 +30,8 @@ public enum ErrorCode {
     AVAILABLE_EMAIL(HttpStatus.OK, "USER-007", "가입 가능한 이메일입니다."),
     MATCH_AUTHENTICATION_CODE(HttpStatus.OK, "USER-008", "인증코드가 일치합니다."),
     SUCCESS_REISSUE_ACCESS_TOKEN(HttpStatus.OK, "USER-009", "새로운 Access Token이 발급되었습니다."),
+    SUCCESS_TEMPORAL_PASSWORD(HttpStatus.OK, "USER-009", "새로운 임시 비밀번호가 해당 메일로 전송되었습니다."),
+    SUCCESS_SIGN_UP(HttpStatus.OK, "USER-009", "회원가입이 완료되었습니다."),
 
 
     // 회원 도메인 : 로그인, 로그아웃
