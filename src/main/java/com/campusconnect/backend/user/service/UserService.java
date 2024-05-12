@@ -25,7 +25,6 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.cache.annotation.CacheEvict;
-import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -56,7 +55,6 @@ public class UserService {
     private final PasswordMatchesValidator passwordMatchesValidator;
     private final PasswordMatchesValidatorForAccountWithdrawal passwordMatchesValidatorForAccountWithdrawal;
     private final JwtProvider jwtProvider;
-    private final RedisTemplate redisTemplate;
     private final S3Uploader s3Uploader;
     private final AmazonS3Client amazonS3Client;
 

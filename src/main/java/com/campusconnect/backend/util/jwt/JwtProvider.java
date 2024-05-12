@@ -1,7 +1,5 @@
 package com.campusconnect.backend.util.jwt;
 
-import com.campusconnect.backend.config.redis.RedisConfig;
-import com.campusconnect.backend.config.redis.RedisRepository;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.ExpiredJwtException;
 import io.jsonwebtoken.Jwts;
@@ -9,27 +7,22 @@ import io.jsonwebtoken.SignatureAlgorithm;
 import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.security.Keys;
 import jakarta.servlet.http.HttpServletRequest;
-import lombok.Data;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpHeaders;
 import org.springframework.stereotype.Component;
-import org.springframework.util.StringUtils;
 
 import java.security.Key;
 import java.util.Base64;
 import java.util.Date;
 import java.util.Optional;
-import java.util.concurrent.TimeUnit;
 
 @Component
 @RequiredArgsConstructor
 @Slf4j
 public class JwtProvider {
 
-    private final RedisConfig redisConfig;
-    private final RedisRepository redisRepository;
     private final LogoutAccessTokenRedisRepository logoutAccessTokenRedisRepository;
     private static final Long accessTokenExpiredMs = 1000 * 60 * 30L;  // 30 Minutes
     private static final Long refreshTokenExpiredMs = 1000 * 60L;  // 1 Days

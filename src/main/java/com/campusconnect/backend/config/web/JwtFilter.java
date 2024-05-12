@@ -1,6 +1,5 @@
 package com.campusconnect.backend.config.web;
 
-import com.campusconnect.backend.user.service.UserService;
 import com.campusconnect.backend.util.exception.CustomException;
 import com.campusconnect.backend.util.exception.ErrorCode;
 import com.campusconnect.backend.util.exception.ErrorResponse;
@@ -16,7 +15,6 @@ import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -35,8 +33,6 @@ import java.util.List;
 @Slf4j
 public class JwtFilter extends OncePerRequestFilter {
 
-    private final UserService userService;
-    private final RedisTemplate redisTemplate;
     private final JwtProvider jwtProvider;
     private final LogoutAccessTokenRedisRepository logoutAccessTokenRedisRepository;
 
