@@ -26,6 +26,9 @@ public class UserSignUpRequest {
     @Size(max = 50, message = "\"@sungkyul.ac.kr\"을 제외한 이메일은 최대 35글자까지 입력할 수 있습니다.")
     private String email;
 
+    @NotEmpty(message = "인증코드 입력은 필수 사항입니다.")
+    private String authenticationNumber;
+
     @NotEmpty(message = "비밀번호 입력은 필수 사항입니다.")
     @Pattern(regexp = "^(?=.*[a-z])(?=.*\\d)(?=.*[@#$%^&+=!])(?=.*[a-zA-Z])(?=.*[0-9])(?=.*[@#$%^&+=!]).{8,20}$",
             message = "비밀번호는 8~20글자 이내로 영문 소문자, 숫자, 특수문자(@#$%^&+=!)를 최소 1개 이상 포함해야 합니다.")
