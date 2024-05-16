@@ -74,6 +74,7 @@ public class EmailService {
         return true;
     }
 
+    @Transactional
     public void authenticateEmail(UserEmailRequest userEmailRequest) {
         String email = userEmailRequest.getEmail();
         email += "@sungkyul.ac.kr";

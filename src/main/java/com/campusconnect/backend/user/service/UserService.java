@@ -69,9 +69,10 @@ public class UserService {
 
     @Transactional
     public UserSignUpResponse createUser(UserSignUpRequest userSignUpRequest, MultipartFile multipartFile) throws IOException {
-        // 학번, 이메일 중복 검증
+        // 학번, 이메일 중복, 인증 번호 유효성 검증
         checkDuplicationUser(userSignUpRequest.getStudentNumber());
         checkDuplicationEmail(userSignUpRequest.getEmail());
+        validateAuthenticationCode(userSignUpRequest.getEmail(), userSignUpRequest.getAuthenticationNumber());
 
         BCryptPasswordEncoder bCryptPasswordEncoder = new BCryptPasswordEncoder();
         String image = userSignUpRequest.getImage();
@@ -122,8 +123,8 @@ public class UserService {
     }
 
     /** 중복된 학번인지 체크한다. */
-    public void validateDuplicateStudentNumber(String userStudentNumberRequest) {
-        if (userRepository.findByStudentNumber(userStudentNumberRequest).isPresent()) {
+    public void validateDuplicateStudentNumber(String studentNumber) {
+        if (userRepository.findByStudentNumber(studentNumber).isPresent()) {
             throw new CustomException(ErrorCode.ALREADY_EXISTS_STUDENT_NUMBER);
         }
     }
@@ -135,11 +136,8 @@ public class UserService {
         }
     }
 
-    /** 인증 코드 일치 검증 */
-    public void validateAuthenticationCode(EmailAuthenticationRequest emailAuthenticationRequest) {
-        String email = emailAuthenticationRequest.getEmail();
-        String authenticationNumber = emailAuthenticationRequest.getAuthenticationNumber();
-
+    /** 인증 코드 일치 검증 (인증 확인 시)*/
+    public void validateAuthenticationCode(String email, String authenticationNumber) {
         if (!authenticationRepository.isCorrectAuthenticationNumber(email, authenticationNumber)) {
             throw new CustomException(ErrorCode.INVALID_AUTHENTICATION_CODE);
         } else {

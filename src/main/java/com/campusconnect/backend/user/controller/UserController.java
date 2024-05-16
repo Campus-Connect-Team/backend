@@ -91,23 +91,23 @@ public class UserController {
     }
 
     @GetMapping("/users/sign-up/studentNumber-duplicate-validation")
-    public ResponseEntity<ErrorResponse> validateDuplicateStudentNumber(@RequestBody @Valid UserStudentNumberRequest userStudentNumberRequest) {
-        userService.validateDuplicateStudentNumber(userStudentNumberRequest.getStudentNumber());
+    public ResponseEntity<ErrorResponse> validateDuplicateStudentNumber(@RequestParam String studentNumber) {
+        userService.validateDuplicateStudentNumber(studentNumber);
         return ResponseEntity.status(ErrorCode.AVAILABLE_STUDENT_NUMBER.getHttpStatus().value())
                 .body(new ErrorResponse(ErrorCode.AVAILABLE_STUDENT_NUMBER));
     }
 
     @GetMapping("/users/sign-up/email-duplicate-validation")
-    public ResponseEntity<ErrorResponse> validateDuplicateEmail(@RequestBody @Valid UserEmailRequest userEmailRequest) {
-        userService.validateDuplicateEmail(userEmailRequest.getEmail());
+    public ResponseEntity<ErrorResponse> validateDuplicateEmail(@RequestParam String email) {
+        userService.validateDuplicateEmail(email);
         return ResponseEntity.status(ErrorCode.AVAILABLE_EMAIL.getHttpStatus().value())
                 .body(new ErrorResponse(ErrorCode.AVAILABLE_EMAIL));
     }
 
     /** 인증코드 검증 */
     @GetMapping("/users/sign-up/email-authentication")
-    public ResponseEntity<ErrorResponse> validateAuthenticationNumber(@RequestBody @Valid EmailAuthenticationRequest emailAuthenticationRequest) {
-        userService.validateAuthenticationCode(emailAuthenticationRequest);
+    public ResponseEntity<ErrorResponse> validateAuthenticationNumber(@RequestParam String email, @RequestParam String authenticationNumber) {
+        userService.validateAuthenticationCode(email, authenticationNumber);
         return ResponseEntity.status(ErrorCode.MATCH_AUTHENTICATION_CODE.getHttpStatus().value())
                 .body(new ErrorResponse(ErrorCode.MATCH_AUTHENTICATION_CODE));
     }
