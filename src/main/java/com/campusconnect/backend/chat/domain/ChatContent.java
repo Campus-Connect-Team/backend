@@ -12,7 +12,7 @@ import java.time.LocalDateTime;
 @Table(name = "chat_content")
 @Getter
 @NoArgsConstructor(access = AccessLevel.PUBLIC)
-public class ChatContent {
+public class ChatContent extends BaseTimeEntity {
 
     @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "chat_content_id")
@@ -22,12 +22,16 @@ public class ChatContent {
     @JoinColumn(name = "chat_room_id")
     private ChatRoom chatRoom;
 
+    @Column(name = "sender_id")
+    private Long senderId;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "message_type")
+    private ChatType messageType;
+
     @Column(name = "message", nullable = false, length = 500)
     private String message;
 
     @Column(name = "chat_check")
     private Boolean isChecked;
-
-    @Column(name = "created_at")
-    private LocalDateTime createdAt;
 }
