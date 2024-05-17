@@ -13,22 +13,20 @@ import org.springframework.web.socket.config.annotation.WebSocketMessageBrokerCo
 @EnableWebSocketMessageBroker
 public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
 
-    private final WebSocketHandler webSocketHandler;
     private final RabbitMqConfig rabbitMqConfig;
 
     @Override
     public void configureMessageBroker(MessageBrokerRegistry config) {
-        // Message Subscribe URL
+        // message subscribe
         config.enableStompBrokerRelay("/exchange")
                 .setClientLogin(rabbitMqConfig.getRabbitUser())
                 .setClientPasscode(rabbitMqConfig.getRabbitPw())
                 .setSystemLogin(rabbitMqConfig.getRabbitUser())
                 .setSystemPasscode(rabbitMqConfig.getRabbitPw())
-                .setRelayHost(rabbitMqConfig.getRabbitHost());
-//                .setRelayPort(rabbitMqConfig.getRabbitPort());
-//                .setVirtualHost(rabbitMqConfig.getRabbitVh());
+                .setRelayHost(rabbitMqConfig.getRabbitHost())
+                .setRelayPort(rabbitMqConfig.getRabbitPort());
 
-        // Message Publish URL
+        // message publish
         config.setPathMatcher(new AntPathMatcher("."));
         config.setApplicationDestinationPrefixes("/pub");
     }
@@ -37,6 +35,18 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
     public void registerStompEndpoints(StompEndpointRegistry registry) {
         registry.addEndpoint("/ws")
                 .setAllowedOriginPatterns("*");
-//                .withSockJS();
     }
+
+//    @Override
+//    public void configureMessageBroker(MessageBrokerRegistry registry) {
+//        registry.setApplicationDestinationPrefixes("/send");  // 클라이언트에서 보낼 메시지를 받을 /prefix
+//        registry.enableSimpleBroker("/chatRoomId");  // 해당 주소를 구독하는 클라이언트에게 메시지 전달
+//    }
+//
+//    @Override
+//    public void registerStompEndpoints(StompEndpointRegistry registry) {
+//        registry.addEndpoint("/ws-stomp")
+//                .setAllowedOriginPatterns("*")
+//                .withSockJS();
+//    }
 }

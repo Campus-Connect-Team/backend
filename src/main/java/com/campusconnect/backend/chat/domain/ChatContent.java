@@ -3,6 +3,7 @@ package com.campusconnect.backend.chat.domain;
 import com.campusconnect.backend.basetime.BaseTimeEntity;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
+import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
@@ -25,13 +26,17 @@ public class ChatContent extends BaseTimeEntity {
     @Column(name = "sender_id")
     private Long senderId;
 
-    @Enumerated(EnumType.STRING)
-    @Column(name = "message_type")
-    private ChatType messageType;
-
     @Column(name = "message", nullable = false, length = 500)
     private String message;
 
     @Column(name = "chat_check")
     private Boolean isChecked;
+
+    @Builder
+    public ChatContent(ChatRoom chatRoom, Long senderId, String message, Boolean isChecked) {
+        this.chatRoom = chatRoom;
+        this.senderId = senderId;
+        this.message = message;
+        this.isChecked = isChecked;
+    }
 }

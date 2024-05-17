@@ -44,8 +44,8 @@ public class RabbitMqConfig {
 //    @Value("${spring.rabbitmq.virtual-host}")
 //    private String rabbitVh;
 
-//    @Value("${RABBITMQ_PORT}")
-//    private int rabbitPort;
+    @Value("${spring.rabbitmq.port}")
+    private int rabbitPort;
 
     @Bean
     public Queue queue() {
@@ -98,7 +98,7 @@ public class RabbitMqConfig {
         objectMapper.configure(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS, true);
         objectMapper.registerModule(dateTimeModule());
 
-        Jackson2JsonMessageConverter converter = new Jackson2JsonMessageConverter();
+        Jackson2JsonMessageConverter converter = new Jackson2JsonMessageConverter(objectMapper);
         return converter;
     }
 

@@ -20,6 +20,4 @@ public class WebSocketHandler extends TextWebSocketHandler {
         TextMessage textMessage = new TextMessage("Hello socket!");
         session.sendMessage(textMessage);
     }
-
-
 }
