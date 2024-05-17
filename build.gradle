@@ -54,6 +54,10 @@ dependencies {
 	implementation group: 'org.springframework.boot', name: 'spring-boot-starter-reactor-netty'
 	implementation 'org.springframework.boot:spring-boot-starter-amqp'
 
+	// Spring Data Reactive MongoDB, Spring Reactive Web 추가
+	implementation 'org.springframework.boot:spring-boot-starter-data-mongodb-reactive'
+	implementation 'org.springframework.boot:spring-boot-starter-webflux'
+
 	// **Spring Boot 3.0 이상: Hibernate5JakartaModule 등록**
 	implementation 'com.fasterxml.jackson.datatype:jackson-datatype-hibernate5-jakarta'
 

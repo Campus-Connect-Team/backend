@@ -77,13 +77,18 @@ public class S3Uploader {
     private Optional<File> convert(MultipartFile multipartFile) {
         try {
             // 업로드된 파일의 null
-            if (multipartFile == null) {
+            if (multipartFile == null || multipartFile.getOriginalFilename() == null || multipartFile.getOriginalFilename().isEmpty()) {
                 return Optional.empty();
             }
 
             // 원본 파일 이름에서 확장자 추출
             String originalFilename = multipartFile.getOriginalFilename();
-            String fileExtension = originalFilename.substring(originalFilename.lastIndexOf('.'));
+//            String fileExtension = originalFilename.substring(originalFilename.lastIndexOf('.'));
+            int dotIndex = originalFilename.lastIndexOf('.');
+            if (dotIndex == -1 || dotIndex == originalFilename.length() - 1) {
+                throw new IllegalArgumentException("Invalid file extension for file: " + originalFilename);
+            }
+            String fileExtension = originalFilename.substring(dotIndex);
 
             // 업로드된 파일의 데이터를 읽어와서 File 객체로 변환
             File convertFile = new File(originalFilename);

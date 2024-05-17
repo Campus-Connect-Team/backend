@@ -41,7 +41,7 @@ public class UserController {
                            @RequestPart(value = "image", required = false) MultipartFile multipartFile) throws IOException {
         // 이미지 업로드 및 URL 생성
         String imageUrl;
-        if (multipartFile != null) {
+        if (multipartFile != null && !multipartFile.isEmpty()) {
             imageUrl = s3Uploader.upload(multipartFile, "user");
         } else {
             imageUrl = UserImageInitializer.getDefaultImageUrl();
