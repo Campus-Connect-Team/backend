@@ -4,6 +4,7 @@ import com.campusconnect.backend.authentication.domain.Authentication;
 import com.campusconnect.backend.authentication.repository.AuthenticationRepository;
 import com.campusconnect.backend.user.dto.request.UserEmailRequest;
 import com.campusconnect.backend.user.dto.request.UserFindPasswordRequest;
+import com.campusconnect.backend.user.dto.response.AuthenticationEmailResponse;
 import com.campusconnect.backend.user.repository.UserRepository;
 import com.campusconnect.backend.user.service.UserService;
 import com.campusconnect.backend.util.exception.CustomException;
@@ -75,7 +76,7 @@ public class EmailService {
     }
 
     @Transactional
-    public void authenticateEmail(UserEmailRequest userEmailRequest) {
+    public AuthenticationEmailResponse authenticateEmail(UserEmailRequest userEmailRequest) {
         String email = userEmailRequest.getEmail();
         email += "@sungkyul.ac.kr";
 
@@ -88,6 +89,11 @@ public class EmailService {
         // 보낸 인증 코드를 인증 테이블에 저장
         Authentication savedAuthenticationInfo = new Authentication(email, authenticationNumber);
         authenticationRepository.save(savedAuthenticationInfo);
+
+        return AuthenticationEmailResponse.builder()
+                .email(userEmailRequest.getEmail() + "@sungkyul.ac.kr")
+                .responseCode(ErrorCode.SUCCESS_SEND_AUTHENTICATION_MAIL.getDescription())
+                .build();
     }
 
     public String sendTemporalPassword(UserFindPasswordRequest userFindPasswordRequest) {

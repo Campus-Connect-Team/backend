@@ -3,6 +3,7 @@ package com.campusconnect.backend.board.dto.request;
 import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.Size;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
 import java.util.List;
 

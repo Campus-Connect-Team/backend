@@ -7,12 +7,12 @@ import lombok.Data;
 @Data
 public class CreatedBoardListResponse {
 
-    private TradeStatus tradeStatus;
+    private String tradeStatus;
     private String boardTitle;
 
     @Builder
     public CreatedBoardListResponse(TradeStatus tradeStatus, String boardTitle) {
-        this.tradeStatus = tradeStatus;
+        this.tradeStatus = tradeStatus.getValue();
         this.boardTitle = boardTitle;
     }
 }

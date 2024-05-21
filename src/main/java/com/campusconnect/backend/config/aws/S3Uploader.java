@@ -7,19 +7,13 @@ import com.amazonaws.services.s3.model.PutObjectRequest;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.core.io.InputStreamResource;
-import org.springframework.core.io.Resource;
-import org.springframework.core.io.ResourceLoader;
 import org.springframework.stereotype.Component;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.InputStream;
-import java.util.Objects;
-import java.util.Optional;
-import java.util.UUID;
+import java.util.*;
 
 @Component
 @RequiredArgsConstructor
@@ -44,6 +38,35 @@ public class S3Uploader {
         String fileName = dirName + "/" + "-" + UUID.randomUUID() + "-" +  originalFileName;
         String uploadImageUrl = putS3(uploadFile, fileName);
         removeNewFile(uploadFile);
+        return uploadImageUrl;
+    }
+
+    // List<MultipartFile>을 전달받아 File로 변환 후 S3에 업로드한다.
+    public List<String> uploadWithMultipartFiles(List<MultipartFile> multipartFiles, String dirName) throws IOException {
+        if (multipartFiles == null || multipartFiles.isEmpty()) {
+            throw new IllegalArgumentException("multipartFiles가 null이거나 비어 있습니다.");
+        }
+
+        List<String> uploadedUrls = new ArrayList<>();
+
+        for (MultipartFile multipartFile : multipartFiles) {
+            File uploadFile = convert(multipartFile)
+                    .orElseThrow(() -> new IllegalArgumentException("MultipartFile -> File로 전환이 실패했습니다."));
+
+            String uploadedUrl = upload(uploadFile, dirName);
+            uploadedUrls.add(uploadedUrl);
+
+            // 임시 파일 삭제
+            removeNewFile(uploadFile);
+        }
+
+        return uploadedUrls;
+    }
+
+    private String uploadWithMultipartFiles(File uploadFile, String dirName) {
+        String originalFileName = uploadFile.getName();
+        String fileName = dirName + "/" + "-" + UUID.randomUUID() + "-" +  originalFileName;
+        String uploadImageUrl = putS3(uploadFile, fileName);
         return uploadImageUrl;
     }
 

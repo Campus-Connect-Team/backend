@@ -23,7 +23,7 @@ public class BoardImage {
     @JoinColumn(name = "board_id")
     private Board board;
 
-    @Column(name = "board_image", length = 255)
+    @Column(name = "board_image", length = 500)
     private String boardImage;
 
     @Builder

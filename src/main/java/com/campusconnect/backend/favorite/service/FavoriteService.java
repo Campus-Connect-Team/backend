@@ -1,7 +1,6 @@
 package com.campusconnect.backend.favorite.service;
 
 import com.campusconnect.backend.board.domain.Board;
-import com.campusconnect.backend.board.dto.request.BoardFavoriteRequest;
 import com.campusconnect.backend.board.repository.BoardRepository;
 import com.campusconnect.backend.favorite.domain.Favorite;
 import com.campusconnect.backend.favorite.repository.FavoriteRepository;
@@ -24,15 +23,15 @@ public class FavoriteService {
 
     /** 관심 상품(게시글)으로 등록 */
     @Transactional
-    public Favorite saveFavorite(Long boardId, BoardFavoriteRequest boardFavoriteRequest) {
+    public Favorite saveFavorite(Long boardId, String studentNumber) {
         // 이미 관심 게시글로 등록했던 회원인지 검증
-        if (favoriteRepository.validateToDuplicationFavorite(boardId, boardFavoriteRequest.getStudentNumber())) {
+        if (favoriteRepository.validateToDuplicationFavorite(boardId, studentNumber)) {
             throw new CustomException(ErrorCode.CANNOT_INCREASE_BOARD_FAVORITE_COUNT);
         }
 
         Board findBoard = boardRepository.findById(boardId)
                 .orElseThrow(() -> new CustomException(ErrorCode.NOT_FOUND_BOARD));
-        User findUser = userRepository.findByStudentNumber(boardFavoriteRequest.getStudentNumber())
+        User findUser = userRepository.findByStudentNumber(studentNumber)
                 .orElseThrow(() -> new CustomException(ErrorCode.NOT_FOUND_USER));
 
         Favorite favorite = Favorite.builder()
@@ -46,11 +45,11 @@ public class FavoriteService {
 
     /** 관심 상품(게시글)으로 등록 취소 */
     @Transactional
-    public void cancelFavorite(Long boardId, BoardFavoriteRequest boardFavoriteRequest) {
+    public void cancelFavorite(Long boardId, String studentNumber) {
         Board findBoard = boardRepository.findById(boardId)
                 .orElseThrow(() -> new CustomException(ErrorCode.NOT_FOUND_BOARD));
 
-        favoriteRepository.deleteToFavoriteBoard(boardId, boardFavoriteRequest.getStudentNumber());
+        favoriteRepository.deleteToFavoriteBoard(boardId, studentNumber);
 
         findBoard.decreaseFavoriteCount();
     }

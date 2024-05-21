@@ -44,8 +44,8 @@ public class Board extends BaseTimeEntity {
     @Column(name = "favorite_count")
     private Integer favoriteCount;
 
-    @Column(name = "chat_count")
-    private Integer chatCount;
+    @Column(name = "comment_count")
+    private Integer commentCount;
 
     @Builder
     public Board(String title,
@@ -58,7 +58,7 @@ public class Board extends BaseTimeEntity {
         this.user = user;
         this.tradeStatus = TradeStatus.TRADE_ACTIVATION;
         this.favoriteCount = 0;
-        this.chatCount = 0;
+        this.commentCount = 0;
     }
 
     /** 제약사항 1 : 게시글에 대한 사진은 10장까지만 업로드 가능 */
@@ -69,7 +69,7 @@ public class Board extends BaseTimeEntity {
     /** 제약사항 2 : "거래 완료" 상태의 게시글은 수정 불가 */
     public void checkToBoardUpdateWithTradeStatus() {
         if (tradeStatus == TradeStatus.TRADE_COMPLETION) {
-            throw new CustomException(ErrorCode.CANNOT_UPDATE_BOARD);
+            throw new CustomException(ErrorCode.CANNOT_UPDATE_BOARD_BECAUSE_TRADE_COMPLETION);
         }
     }
 
@@ -126,5 +126,20 @@ public class Board extends BaseTimeEntity {
             throw new CustomException(ErrorCode.LIMIT_EXCEEDED_BY_ZERO_DECREASE_FAVORITE_COUNT);
         }
         this.favoriteCount--;
+    }
+
+    /** 게시글의 댓글 작성 시, 댓글 수 증가 */
+    public void increaseCommentCount() {
+        this.commentCount++;
+    }
+
+    /** 게시글의 댓글 삭제 시 댓글 수 감소 */
+    public void decreaseCommentCount() {
+        this.commentCount--;
+    }
+
+    /** 회원탈퇴로 인해 특정 회원의 댓글 삭제 시, 관련된 게시글의 댓글 수도 그만큼 감소 */
+    public void deleteCommentAndDecreaseCommentCount(Integer affectedCommentsCount) {
+        this.commentCount -= affectedCommentsCount;
     }
 }

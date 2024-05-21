@@ -18,8 +18,8 @@ public class BoardListResponse {
     private String representativeImage;
     private String title;
     private Integer favoriteCount;
-    private Integer chatCount;
-    private TradeStatus tradeStatus;
+    private Integer commentCount;
+    private String tradeStatus;
 
     @Builder
     public BoardListResponse(Long boardId,
@@ -30,7 +30,7 @@ public class BoardListResponse {
                              String representativeImage,
                              String title,
                              Integer favoriteCount,
-                             Integer chatCount,
+                             Integer commentCount,
                              TradeStatus tradeStatus) {
         this.boardId = boardId;
         this.department = department;
@@ -40,7 +40,7 @@ public class BoardListResponse {
         this.representativeImage = representativeImage;
         this.title = title;
         this.favoriteCount = favoriteCount;
-        this.chatCount = chatCount;
-        this.tradeStatus = tradeStatus;
+        this.commentCount = commentCount;
+        this.tradeStatus = tradeStatus.getValue();
     }
 }

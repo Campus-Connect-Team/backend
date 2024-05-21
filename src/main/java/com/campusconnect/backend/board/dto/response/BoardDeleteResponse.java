@@ -8,12 +8,12 @@ public class BoardDeleteResponse {
 
     private Long boardId;
     private String title;
-    private String errorCode;
+    private String responseCode;
 
     @Builder
-    public BoardDeleteResponse(Long boardId, String title, String errorCode) {
+    public BoardDeleteResponse(Long boardId, String title, String responseCode) {
         this.boardId = boardId;
         this.title = title;
-        this.errorCode = errorCode;
+        this.responseCode = responseCode;
     }
 }

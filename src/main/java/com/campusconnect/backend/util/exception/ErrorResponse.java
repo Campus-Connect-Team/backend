@@ -9,13 +9,13 @@ public class ErrorResponse {
     private Integer status;
     private String name;
     private String code;
-    private String description;
+    private String responseCode;
 
     @Builder
     public ErrorResponse(ErrorCode errorCode) {
         this.status = errorCode.getHttpStatus().value();
         this.name = errorCode.name();
         this.code = errorCode.getCode();
-        this.description = errorCode.getDescription();
+        this.responseCode = errorCode.getDescription();
     }
 }

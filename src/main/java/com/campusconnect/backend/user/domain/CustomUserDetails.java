@@ -23,6 +23,10 @@ public class CustomUserDetails implements UserDetails {
         return collection;
     }
 
+    public String getStudentNumber() {
+        return user.getStudentNumber();
+    }
+
     @Override
     public String getPassword() {
         return user.getPassword();
