@@ -191,6 +191,9 @@ public class UserService {
 
         return UserLoginResponse.builder()
                 .studentNumber(studentNumber)
+                .department(findUser.getDepartment())
+                .name(findUser.getName())
+                .userProfileImage(findUser.getImage())
                 .responseCode(ErrorCode.SUCCESS_LOGIN.getDescription())
                 .accessToken(accessToken)
                 .refreshToken(refreshToken)
