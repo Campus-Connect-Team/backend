@@ -6,11 +6,14 @@ import com.campusconnect.backend.board.domain.Board;
 import com.campusconnect.backend.board.repository.BoardImageRepository;
 import com.campusconnect.backend.board.repository.BoardRepository;
 import com.campusconnect.backend.board.service.BoardService;
+import com.campusconnect.backend.comment.repository.CommentRepository;
 import com.campusconnect.backend.config.aws.S3Uploader;
 import com.campusconnect.backend.config.redis.CacheKey;
 import com.campusconnect.backend.favorite.domain.Favorite;
 import com.campusconnect.backend.favorite.repository.FavoriteRepository;
+import com.campusconnect.backend.reply.repository.ReplyRepository;
 import com.campusconnect.backend.user.domain.User;
+import com.campusconnect.backend.user.domain.UserImageInitializer;
 import com.campusconnect.backend.user.domain.UserRole;
 import com.campusconnect.backend.user.dto.request.*;
 import com.campusconnect.backend.user.dto.response.*;
@@ -34,6 +37,7 @@ import org.springframework.web.multipart.MultipartFile;
 import java.io.IOException;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 @Service
@@ -49,6 +53,8 @@ public class UserService {
     private final FavoriteRepository favoriteRepository;
     private final RefreshTokenRedisRepository refreshTokenRedisRepository;
     private final LogoutAccessTokenRedisRepository logoutAccessTokenRedisRepository;
+    private final CommentRepository commentRepository;
+    private final ReplyRepository replyRepository;
     private final BoardService boardService;
     private final EmailService emailService;
     private final PasswordEncoder passwordEncoder;
@@ -72,7 +78,10 @@ public class UserService {
         // 학번, 이메일 중복, 인증 번호 유효성 검증
         checkDuplicationUser(userSignUpRequest.getStudentNumber());
         checkDuplicationEmail(userSignUpRequest.getEmail());
-        validateAuthenticationCode(userSignUpRequest.getEmail(), userSignUpRequest.getAuthenticationNumber());
+//        validateAuthenticationCode(userSignUpRequest.getEmail(), userSignUpRequest.getAuthenticationNumber());
+
+        // 이미지 업로드 및 URL 생성
+        validateUserProfileImage(userSignUpRequest, multipartFile);
 
         BCryptPasswordEncoder bCryptPasswordEncoder = new BCryptPasswordEncoder();
         String image = userSignUpRequest.getImage();
@@ -100,12 +109,23 @@ public class UserService {
         userRepository.save(user);
 
         return UserSignUpResponse.builder()
+                .userId(user.getId())
                 .studentNumber(user.getStudentNumber())
                 .college(user.getCollege())
                 .department(user.getDepartment())
                 .name(user.getName())
                 .responseCode(ErrorCode.SUCCESS_SIGN_UP.getDescription())
                 .build();
+    }
+
+    private void validateUserProfileImage(UserSignUpRequest userSignUpRequest, MultipartFile multipartFile) throws IOException {
+        String imageUrl;
+        if (multipartFile != null && !multipartFile.isEmpty()) {
+            imageUrl = s3Uploader.upload(multipartFile, "user");
+        } else {
+            imageUrl = UserImageInitializer.getDefaultImageUrl();
+        }
+        userSignUpRequest.setImage(imageUrl);
     }
 
     /** 중복된 이메일인지 체크한다. */
@@ -124,6 +144,9 @@ public class UserService {
 
     /** 중복된 학번인지 체크한다. */
     public void validateDuplicateStudentNumber(String studentNumber) {
+        if (studentNumber.length() != 8) {
+            throw new CustomException(ErrorCode.INVALID_STUDENT_NUMBER);
+        }
         if (userRepository.findByStudentNumber(studentNumber).isPresent()) {
             throw new CustomException(ErrorCode.ALREADY_EXISTS_STUDENT_NUMBER);
         }
@@ -221,6 +244,7 @@ public class UserService {
 
         String newAccessToken = jwtProvider.createAccessToken(studentNumber, secretKey, accessTokenExpiredMs);
         return UserReissueResponse.builder()
+                .studentNumber(studentNumber)
                 .accessToken(newAccessToken)
                 .refreshToken(refreshToken)
                 .responseCode(ErrorCode.SUCCESS_REISSUE_ACCESS_TOKEN.getDescription())
@@ -276,7 +300,7 @@ public class UserService {
                         .sellerDepartment(favorite.getBoard().getUser().getDepartment())
                         .sellerName(favorite.getBoard().getUser().getName())
                         .favoriteCount(favorite.getBoard().getFavoriteCount())
-                        .chatCount(favorite.getBoard().getChatCount())
+                        .commentCount(favorite.getBoard().getCommentCount())
                         .boardTitle(favorite.getBoard().getTitle())
                         .tradeStatus(favorite.getBoard().getTradeStatus())
                         .build())
@@ -294,12 +318,31 @@ public class UserService {
                 .collect(Collectors.toList());
         int createdBoardListCount = createdBoardList.size();
 
+        // 작성한 댓글에 대한 판매자 게시글 리스트 영역
+        Integer createdAllCommentCount = commentRepository.findByStudentNumber(studentNumber);
+        List<Board> boardsByUserComments = commentRepository.findBoardsByUserComments(studentNumber);
+
+        List<MyCommentsListWithSellerBoard> myCommentsListWithSellerBoardList = boardsByUserComments.stream()
+                .map(board -> {
+                    Integer commentCount = commentRepository.countByBoardIdAndUserStudentNumber(board.getId(), studentNumber);
+                    return MyCommentsListWithSellerBoard.builder()
+                            .createdCommentCount(commentCount)
+                            .sellerProfileImage(board.getUser().getImage())
+                            .sellerName(board.getUser().getName())
+                            .sellerDepartment(board.getUser().getDepartment())
+                            .boardTitle(board.getTitle())
+                            .build();
+                })
+                .collect(Collectors.toList());
+
         return UserMyProfileAllResponse.builder()
                 .basicProfileResponses(basicProfileResponses)
                 .favoriteListCount(favoriteListCount)
                 .myFavoriteListResponses(myFavoriteListResponses)
                 .createdBoardCount(createdBoardListCount)
                 .createdBoardListResponses(createdBoardListResponses)
+                .createdAllCommentCount(createdAllCommentCount)
+                .myCommentsListWithSellerBoards(myCommentsListWithSellerBoardList)
                 .build();
     }
 
@@ -342,6 +385,9 @@ public class UserService {
 
         return UserBasicProfileEditResponse.builder()
                 .userId(findUser.getId())
+                .name(findUser.getName())
+                .college(findUser.getCollege())
+                .department(findUser.getDepartment())
                 .responseCode(ErrorCode.SUCCESS_EDIT_MY_BASIC_PROFILE.getDescription())
                 .build();
     }
@@ -390,8 +436,14 @@ public class UserService {
         for (Long deleteMyCheckedFavoritesAndGetRelatedToBoardId : deleteMyCheckedFavoritesAndGetRelatedToBoardIds) {
             Board findBoard = boardRepository.findById(deleteMyCheckedFavoritesAndGetRelatedToBoardId)
                     .orElseThrow(() -> new CustomException(ErrorCode.NOT_FOUND_BOARD));
+
             findBoard.decreaseFavoriteCount();
         }
+
+        // 회원탈퇴 시, 본인이 작성한 답글 내역 모두 삭제
+        replyRepository.deleteAllByMyStudentNumber(studentNumber);
+        // 본인이 작성한 댓글 내역 모두 삭제하고, 삭제된 댓글의 게시글 ID의 댓글 수 최신화
+        updateBoardsCommentCountAfterDeletingUserComments(studentNumber);
 
         // 본인의 게시글 이미지, 게시글 삭제
         boardService.deleteFromS3BucketToMultipleBoards(boardList);
@@ -409,6 +461,21 @@ public class UserService {
                 .userId(withdrawalUser.getId())
                 .responseCode(ErrorCode.SUCCESS_WITHDRAWAL_USER.getDescription())
                 .build();
+    }
+
+    private void updateBoardsCommentCountAfterDeletingUserComments(String studentNumber) {
+        Map<Long, Long> affectedBoardIdsWithCount = commentRepository.deleteByUserStudentNumberAndReturnBoardIds(studentNumber);
+
+        for (Map.Entry<Long, Long> entry : affectedBoardIdsWithCount.entrySet()) {
+            Long boardId = entry.getKey();
+            Long deletedCommentsCount = entry.getValue();
+
+            Board findBoard = boardRepository.findById(boardId)
+                    .orElseThrow(() -> new CustomException(ErrorCode.NOT_FOUND_BOARD));
+
+            // 댓글 수 최신화
+            findBoard.deleteCommentAndDecreaseCommentCount(deletedCommentsCount.intValue());
+        }
     }
 
     private void validateForAccountWithdrawal(UserWithdrawalRequest userWithdrawalRequest, User findUser) {

@@ -3,14 +3,17 @@ package com.campusconnect.backend.board.service;
 import com.campusconnect.backend.board.domain.Board;
 import com.campusconnect.backend.board.domain.BoardImage;
 import com.campusconnect.backend.board.dto.request.BoardCreateRequest;
-import com.campusconnect.backend.board.dto.request.BoardFavoriteRequest;
 import com.campusconnect.backend.board.dto.request.BoardUpdateRequest;
 import com.campusconnect.backend.board.dto.response.*;
 import com.campusconnect.backend.board.repository.BoardImageRepository;
 import com.campusconnect.backend.board.repository.BoardRepository;
+import com.campusconnect.backend.comment.domain.Comment;
+import com.campusconnect.backend.comment.repository.CommentRepository;
 import com.campusconnect.backend.config.aws.S3Uploader;
 import com.campusconnect.backend.favorite.domain.Favorite;
 import com.campusconnect.backend.favorite.service.FavoriteService;
+import com.campusconnect.backend.reply.domain.Reply;
+import com.campusconnect.backend.reply.repository.ReplyRepository;
 import com.campusconnect.backend.user.domain.User;
 import com.campusconnect.backend.user.repository.UserRepository;
 import com.campusconnect.backend.util.exception.CustomException;
@@ -36,19 +39,23 @@ public class BoardService {
     private final UserRepository userRepository;
     private final BoardRepository boardRepository;
     private final BoardImageRepository boardImageRepository;
+    private final CommentRepository commentRepository;
+    private final ReplyRepository replyRepository;
     private final FavoriteService favoriteService;
     private final S3Uploader s3Uploader;
 
     /** 판매 게시글 작성 */
     @Transactional
-    public BoardCreateResponse createBoard(BoardCreateRequest boardCreateRequest, List<MultipartFile> multipartFiles) throws IOException {
-        User foundUser = userRepository.findByStudentNumber(boardCreateRequest.getStudentNumber())
+    public BoardCreateResponse createBoard(BoardCreateRequest boardCreateRequest,
+                                           String studentNumber,
+                                           List<MultipartFile> multipartFiles) throws IOException {
+        User foundUser = userRepository.findByStudentNumber(studentNumber)
                 .orElseThrow(() -> new CustomException(ErrorCode.NOT_FOUND_USER));
 
         // 이미지 업로드 및 URL 생성
         List<String> boardImageNames = new ArrayList<>();
 
-        if (multipartFiles == null) {
+        if (multipartFiles == null || multipartFiles.isEmpty() || multipartFiles.stream().allMatch(MultipartFile::isEmpty)) {
             throw new CustomException(ErrorCode.NOT_FOUND_BOARD_IMAGES);
         }
 
@@ -92,19 +99,53 @@ public class BoardService {
         Board findBoard = boardRepository.findById(boardId)
                 .orElseThrow(() -> new CustomException(ErrorCode.NOT_FOUND_BOARD));
 
+        List<Comment> comments = commentRepository.findAllCommentByBoardId(boardId)
+                .orElseThrow(() -> new CustomException(ErrorCode.NOT_FOUND_BOARD));
+
+        List<Reply> replies = replyRepository.findAllRepliesByBoardId(boardId)
+                .orElseThrow(() -> new CustomException(ErrorCode.NOT_EXISTS_REPLIES));
+
+        // 댓글 리스트
+        List<BoardCommentDetailResponse> boardCommentDetailResponses = comments.stream()
+                .map(comment -> {
+                    // 해당 댓글에 대한 답글 리스트 필터링
+                    List<BoardReplyDetailResponse> filteredReplies = replies.stream()
+                            .filter(reply -> reply.getComment().getId().equals(comment.getId()))
+                            .map(reply -> BoardReplyDetailResponse.builder()
+                                    .replyId(reply.getId())
+                                    .replierProfileImage(reply.getUser().getImage())
+                                    .replierDepartment(reply.getReplierDepartment())
+                                    .replierName(reply.getReplierName())
+                                    .replyContent(reply.getReplyContent())
+                                    .modifiedAt(reply.getModifiedDate())
+                                    .build())
+                            .collect(Collectors.toList());
+
+                    return BoardCommentDetailResponse.builder()
+                            .commentId(comment.getId())
+                            .commenterProfileImage(comment.getUser().getImage())
+                            .commenterDepartment(comment.getCommenterDepartment())
+                            .commenterName(comment.getCommenterName())
+                            .commentContent(comment.getCommentContent())
+                            .modifiedAt(comment.getModifiedDate())
+                            .boardReplyDetailResponses(filteredReplies)
+                            .build();
+                })
+                .collect(Collectors.toList());
+
         return BoardDetailResponse.builder()
                 .boardId(findBoard.getId())
                 .image(findBoard.getUser().getImage())
                 .department(findBoard.getUser().getDepartment())
                 .name(findBoard.getUser().getName())
-                .createDate(findBoard.getCreatedDate())
-                .sellerManner(findBoard.getUser().getSellerManner())
+                .createdAt(findBoard.getCreatedDate())
                 .boardImages(findBoard.getBoardImages())
                 .title(findBoard.getTitle())
                 .content(findBoard.getContent())
                 .tradeStatus(findBoard.getTradeStatus())
                 .favoriteCount(findBoard.getFavoriteCount())
-                .chatCount(findBoard.getChatCount())
+                .commentCount(findBoard.getCommentCount())
+                .boardCommentDetailResponses(boardCommentDetailResponses)
                 .build();
     }
 
@@ -119,7 +160,7 @@ public class BoardService {
                         .representativeImage(board.getBoardImages().get(0))
                         .title(board.getTitle())
                         .favoriteCount(board.getFavoriteCount())
-                        .chatCount(board.getChatCount())
+                        .commentCount(board.getCommentCount())
                         .tradeStatus(board.getTradeStatus())
                         .build())
                 .collect(Collectors.toList());
@@ -137,7 +178,7 @@ public class BoardService {
                         .representativeImage(board.getBoardImages().get(0))
                         .title(board.getTitle())
                         .favoriteCount(board.getFavoriteCount())
-                        .chatCount(board.getChatCount())
+                        .commentCount(board.getCommentCount())
                         .tradeStatus(board.getTradeStatus())
                         .build())
                 .collect(Collectors.toList());
@@ -155,7 +196,7 @@ public class BoardService {
                         .representativeImage(board.getBoardImages().get(0))
                         .title(board.getTitle())
                         .favoriteCount(board.getFavoriteCount())
-                        .chatCount(board.getChatCount())
+                        .commentCount(board.getCommentCount())
                         .tradeStatus(board.getTradeStatus())
                         .build())
                 .collect(Collectors.toList());
@@ -163,12 +204,18 @@ public class BoardService {
 
     /** 게시글 수정 */
     @Transactional
-    public void updateBoard(Long boardId,
+    public BoardUpdateResponse updateBoard(Long boardId,
                             BoardUpdateRequest boardUpdateRequest,
+                            String studentNumber,
                             List<MultipartFile> multipartFiles) throws IOException {
 
         Board findBoard = boardRepository.findById(boardId)
                 .orElseThrow(() -> new CustomException(ErrorCode.NOT_FOUND_BOARD));
+
+        // 본인이 작성한 글이 아니라면 수정 불가
+        if (!findBoard.getUser().getStudentNumber().equals(studentNumber)) {
+            throw new CustomException(ErrorCode.CANNOT_UPDATE_OR_DELETE_BOARD_BECAUSE_NOT_RELEVANT_USER);
+        }
 
         // 거래 완료인 경우 게시글 수정 불가
         findBoard.checkToBoardUpdateWithTradeStatus();
@@ -182,10 +229,20 @@ public class BoardService {
 
         // 게시글 업로드 사진 변경
         updateBoardImages(multipartFiles, findBoard);
+
+        return BoardUpdateResponse.builder()
+                .name(findBoard.getUser().getName())
+                .department(findBoard.getUser().getDepartment())
+                .boardId(findBoard.getId())
+                .title(findBoard.getTitle())
+                .content(findBoard.getContent())
+                .tradeStatus(findBoard.getTradeStatus())
+                .responseCode(ErrorCode.SUCCESS_BOARD_UPDATE.getDescription())
+                .build();
     }
 
     private void updateBoardImages(List<MultipartFile> multipartFiles, Board findBoard) throws IOException {
-        if (multipartFiles == null || multipartFiles.isEmpty()) {
+        if (multipartFiles == null || multipartFiles.isEmpty() || multipartFiles.stream().allMatch(MultipartFile::isEmpty)) {
             throw new CustomException(ErrorCode.NOT_FOUND_BOARD_IMAGES);
         }
 
@@ -214,42 +271,47 @@ public class BoardService {
 
     /** 관심 상품으로 등록 */
     @Transactional
-    public BoardFavoriteResponse registerToFavoriteBoard(Long boardId, BoardFavoriteRequest boardFavoriteRequest) {
-        Favorite savedFavorite = favoriteService.saveFavorite(boardId, boardFavoriteRequest);
+    public BoardFavoriteResponse registerToFavoriteBoard(Long boardId, String studentNumber) {
+        Favorite savedFavorite = favoriteService.saveFavorite(boardId, studentNumber);
 
         return BoardFavoriteResponse.builder()
                 .boardId(boardId)
                 .favoriteCount(savedFavorite.getBoard().getFavoriteCount())
                 .userName(savedFavorite.getUser().getName())
                 .studentNumber(savedFavorite.getUser().getStudentNumber())
-                .errorCode(ErrorCode.SUCCESS_REGISTER_FAVORITE_BOARD)
+                .responseCode(ErrorCode.SUCCESS_REGISTER_FAVORITE_BOARD.getDescription())
                 .build();
     }
 
     /** 관심 상품으로 등록 취소 */
     @Transactional
-    public BoardFavoriteResponse cancelToFavoriteBoard(Long boardId, BoardFavoriteRequest boardFavoriteRequest) {
+    public BoardFavoriteResponse cancelToFavoriteBoard(Long boardId, String studentNumber) {
         Board findBoard = boardRepository.findById(boardId)
                 .orElseThrow(() -> new CustomException(ErrorCode.NOT_FOUND_BOARD));
-        User findUser = userRepository.findByStudentNumber(boardFavoriteRequest.getStudentNumber())
+        User findUser = userRepository.findByStudentNumber(studentNumber)
                 .orElseThrow(() -> new CustomException(ErrorCode.NOT_FOUND_USER));
 
-        favoriteService.cancelFavorite(boardId, boardFavoriteRequest);
+        favoriteService.cancelFavorite(boardId, studentNumber);
 
         return BoardFavoriteResponse.builder()
                 .boardId(boardId)
                 .favoriteCount(findBoard.getFavoriteCount())
                 .userName(findUser.getName())
                 .studentNumber(findUser.getStudentNumber())
-                .errorCode(ErrorCode.SUCCESS_CANCEL_FAVORITE_BOARD)
+                .responseCode(ErrorCode.SUCCESS_CANCEL_FAVORITE_BOARD.getDescription())
                 .build();
     }
 
     /** 게시글 삭제 */
     @Transactional
-    public BoardDeleteResponse deleteBoard(Long boardId){
+    public BoardDeleteResponse deleteBoard(String studentNumber, Long boardId){
         Board findBoard = boardRepository.findById(boardId)
                 .orElseThrow(() -> new CustomException(ErrorCode.NOT_FOUND_BOARD));
+
+        // 본인이 작성한 글이 아니라면 삭제 불가
+        if (!findBoard.getUser().getStudentNumber().equals(studentNumber)) {
+            throw new CustomException(ErrorCode.CANNOT_UPDATE_OR_DELETE_BOARD_BECAUSE_NOT_RELEVANT_USER);
+        }
 
         // 거래 완료인 경우 게시글 삭제 불가
         findBoard.checkToBoardDeleteWithTradeStatus();
@@ -261,10 +323,14 @@ public class BoardService {
         // 게시글 삭제 시 해당 게시글과 관련된 관심 게시글 내역도 모두 삭제
         favoriteService.deleteAllFavorites(boardId);
 
+        // 게시글 삭제 시 해당 게시글과 관련된 댓글, 답글 내역도 모두 삭제
+        replyRepository.deleteAllByBoardId(boardId);
+        commentRepository.deleteByAllBoardId(boardId);
+
         return BoardDeleteResponse.builder()
                 .boardId(findBoard.getId())
                 .title(findBoard.getTitle())
-                .errorCode(ErrorCode.SUCCESS_BOARD_DELETE.getDescription())
+                .responseCode(ErrorCode.SUCCESS_BOARD_DELETE.getDescription())
                 .build();
     }
 

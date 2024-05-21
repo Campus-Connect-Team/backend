@@ -1,5 +1,6 @@
 package com.campusconnect.backend.board.dto.response;
 
+import com.campusconnect.backend.board.domain.TradeStatus;
 import lombok.Builder;
 import lombok.Data;
 
@@ -27,8 +28,8 @@ public class BoardPagingListResponse {
                         .representativeImage(board.getRepresentativeImage())
                         .title(board.getTitle())
                         .favoriteCount(board.getFavoriteCount())
-                        .chatCount(board.getChatCount())
-                        .tradeStatus(board.getTradeStatus())
+                        .commentCount(board.getCommentCount())
+                        .tradeStatus(TradeStatus.valueOf(board.getTradeStatus()))
                         .build())
                 .collect(Collectors.toList());
         this.totalPage = totalPage;

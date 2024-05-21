@@ -6,6 +6,7 @@ import lombok.Data;
 @Data
 public class UserSignUpResponse {
 
+    private Long userId;
     private String studentNumber;
     private String college;
     private String department;
@@ -13,7 +14,13 @@ public class UserSignUpResponse {
     private String responseCode;
 
     @Builder
-    public UserSignUpResponse(String studentNumber, String college, String department, String name, String responseCode) {
+    public UserSignUpResponse(Long userId,
+                              String studentNumber,
+                              String college,
+                              String department,
+                              String name,
+                              String responseCode) {
+        this.userId = userId;
         this.studentNumber = studentNumber;
         this.college = college;
         this.department = department;
