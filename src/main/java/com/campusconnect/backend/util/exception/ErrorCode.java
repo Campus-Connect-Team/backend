@@ -27,29 +27,29 @@ public enum ErrorCode {
 
 
     // 회원 도메인 : 회원가입 - 처리 가능한 요청에 대한 Response Status Code
-    AVAILABLE_STUDENT_NUMBER(HttpStatus.OK, "USER-007", "가입 가능한 학번입니다."),
-    AVAILABLE_EMAIL(HttpStatus.OK, "USER-008", "가입 가능한 이메일입니다."),
-    SUCCESS_SEND_AUTHENTICATION_MAIL(HttpStatus.OK, "USER-009", "인증 코드 이메일이 발송되었습니다."),
-    MATCH_AUTHENTICATION_CODE(HttpStatus.OK, "USER-010", "인증코드가 일치합니다."),
-    SUCCESS_REISSUE_ACCESS_TOKEN(HttpStatus.OK, "USER-011", "새로운 Access Token이 발급되었습니다."),
-    SUCCESS_TEMPORAL_PASSWORD(HttpStatus.OK, "USER-012", "새로운 임시 비밀번호가 해당 메일로 전송되었습니다."),
-    SUCCESS_SIGN_UP(HttpStatus.OK, "USER-013", "회원가입이 완료되었습니다."),
+    AVAILABLE_STUDENT_NUMBER(HttpStatus.OK, "USER-008", "가입 가능한 학번입니다."),
+    AVAILABLE_EMAIL(HttpStatus.OK, "USER-009", "가입 가능한 이메일입니다."),
+    SUCCESS_SEND_AUTHENTICATION_MAIL(HttpStatus.OK, "USER-010", "인증 코드 이메일이 발송되었습니다."),
+    MATCH_AUTHENTICATION_CODE(HttpStatus.OK, "USER-011", "인증코드가 일치합니다."),
+    SUCCESS_REISSUE_ACCESS_TOKEN(HttpStatus.OK, "USER-012", "새로운 Access Token이 발급되었습니다."),
+    SUCCESS_TEMPORAL_PASSWORD(HttpStatus.OK, "USER-013", "새로운 임시 비밀번호가 해당 메일로 전송되었습니다."),
+    SUCCESS_SIGN_UP(HttpStatus.OK, "USER-014", "회원가입이 완료되었습니다."),
 
 
     // 회원 도메인 : 로그인, 로그아웃
-    FAIL_LOGIN(HttpStatus.UNAUTHORIZED, "USER-014", "로그인에 실패했습니다. 학번 또는 비밀번호가 정확한지 확인해 주세요."),
-    NOT_FOUND_USER(HttpStatus.NOT_FOUND, "USER-015",  "해당 학번으로 회원 정보가 존재하지 않습니다."),
-    NOT_PUBLISH_TOKEN(HttpStatus.BAD_REQUEST, "USER-016", "토큰이 발행되지 않았습니다."),
-    LOGGED_OUT_ACCESS_TOKEN(HttpStatus.UNAUTHORIZED, "USER-017", "이미 로그아웃 처리된 Access Token입니다."),
-    NOT_EXISTED_REFRESH_TOKEN(HttpStatus.UNAUTHORIZED, "USER-018", "해당 사용자(학번)로 Refresh Token이 존재하지 않습니다"),
-    NOT_EXISTED_ACCESS_GRANT(HttpStatus.UNAUTHORIZED, "USER-019", "로그아웃하셨거나, 로그인하지 않아 서비스 접근 권한이 없습니다."),
+    FAIL_LOGIN(HttpStatus.UNAUTHORIZED, "USER-015", "로그인에 실패했습니다. 학번 또는 비밀번호가 정확한지 확인해 주세요."),
+    NOT_FOUND_USER(HttpStatus.NOT_FOUND, "USER-016",  "해당 학번으로 회원 정보가 존재하지 않습니다."),
+    NOT_PUBLISH_TOKEN(HttpStatus.UNAUTHORIZED, "USER-017", "토큰이 발행되지 않았습니다."),
+    LOGGED_OUT_ACCESS_TOKEN(HttpStatus.UNAUTHORIZED, "USER-018", "이미 로그아웃 처리된 Access Token입니다."),
+    NOT_EXISTED_REFRESH_TOKEN(HttpStatus.UNAUTHORIZED, "USER-019", "해당 사용자(학번)로 Refresh Token이 존재하지 않습니다"),
+    NOT_EXISTED_ACCESS_GRANT(HttpStatus.UNAUTHORIZED, "USER-020", "로그아웃하셨거나, 로그인하지 않아 서비스 접근 권한이 없습니다."),
 
 
 
     // 회원 도메인 : 로그인, 로그아웃  - 처리 가능한 요청에 대한 Response Status Code
-    SUCCESS_LOGIN(HttpStatus.OK, "USER-020", "서비스에 로그인되었습니다."),
-    SUCCESS_TOKEN_REISSUE(HttpStatus.OK, "USER-021", "토큰이 재발급되었습니다."),
-    SUCCESS_LOGOUT(HttpStatus.OK, "USER-022", "서비스에서 로그아웃되었습니다."),
+    SUCCESS_LOGIN(HttpStatus.OK, "USER-021", "서비스에 로그인되었습니다."),
+    SUCCESS_TOKEN_REISSUE(HttpStatus.OK, "USER-022", "토큰이 재발급되었습니다."),
+    SUCCESS_LOGOUT(HttpStatus.OK, "USER-023", "서비스에서 로그아웃되었습니다."),
 
 
 
@@ -89,21 +89,21 @@ public enum ErrorCode {
 
 
     // 댓글, 답글 도메인 : 댓글, 답글 기본 CRUD, 그외 세부 기능들
-    CANNOT_UPDATE_OR_DELETE_COMMENT_BECAUSE_NOT_RELEVANT_USER(HttpStatus.BAD_REQUEST, "COMMENTS-002", "본인이 작성하지 않은 댓글은 수정 또는 삭제할 수 없습니다."),
+    CANNOT_UPDATE_OR_DELETE_COMMENT_BECAUSE_NOT_RELEVANT_USER(HttpStatus.BAD_REQUEST, "COMMENTS-001", "본인이 작성하지 않은 댓글은 수정 또는 삭제할 수 없습니다."),
     AFFECTED_REPLIES_COUNT_CANNOT_BE_NEGATIVE(HttpStatus.BAD_REQUEST, "COMMENTS-002", "삭제된 답글 수는 음수가 될 수 없습니다."),
 
-    CANNOT_UPDATE_OR_DELETE_REPLY_BECAUSE_NOT_RELEVANT_USER(HttpStatus.BAD_REQUEST, "COMMENTS-002", "본인이 작성하지 않은 답글은 수정 또는 삭제할 수 없습니다."),
+    CANNOT_UPDATE_OR_DELETE_REPLY_BECAUSE_NOT_RELEVANT_USER(HttpStatus.BAD_REQUEST, "COMMENTS-003", "본인이 작성하지 않은 답글은 수정 또는 삭제할 수 없습니다."),
 
 
     // 댓글, 답글 도메인 : 댓글, 답글 CRUD, 그외 세부 기능들 - 처리 가능한 요청에 대한 Response Status Code
-    NOT_EXISTS_COMMENTS(HttpStatus.NOT_FOUND, "COMMENTS-001", "게시글에 대한 댓글이 존재하지 않습니다."),
-    NOT_EXISTS_REPLIES(HttpStatus.NOT_FOUND, "COMMENTS-001", "댓글에 대한 답글이 존재하지 않습니다."),
-    SUCCESS_COMMENT_CREATION(HttpStatus.OK, "COMMENTS-003", "댓글 작성이 완료되었습니다."),
-    SUCCESS_COMMENT_UPDATE(HttpStatus.OK, "COMMENTS-004", "댓글 수정이 완료되었습니다."),
-    SUCCESS_COMMENT_DELETE(HttpStatus.OK, "COMMENTS-005", "댓글 삭제가 완료되었습니다."),
-    SUCCESS_REPLY_CREATION(HttpStatus.OK, "COMMENTS-003", "답글 작성이 완료되었습니다."),
-    SUCCESS_REPLY_UPDATE(HttpStatus.OK, "COMMENTS-003", "답글 수정이 완료되었습니다."),
-    SUCCESS_REPLY_DELETE(HttpStatus.OK, "COMMENTS-005", "답글 삭제가 완료되었습니다."),
+    NOT_EXISTS_COMMENTS(HttpStatus.NOT_FOUND, "COMMENTS-004", "게시글에 대한 댓글이 존재하지 않습니다."),
+    NOT_EXISTS_REPLIES(HttpStatus.NOT_FOUND, "COMMENTS-005", "댓글에 대한 답글이 존재하지 않습니다."),
+    SUCCESS_COMMENT_CREATION(HttpStatus.OK, "COMMENTS-006", "댓글 작성이 완료되었습니다."),
+    SUCCESS_COMMENT_UPDATE(HttpStatus.OK, "COMMENTS-007", "댓글 수정이 완료되었습니다."),
+    SUCCESS_COMMENT_DELETE(HttpStatus.OK, "COMMENTS-008", "댓글 삭제가 완료되었습니다."),
+    SUCCESS_REPLY_CREATION(HttpStatus.OK, "COMMENTS-009", "답글 작성이 완료되었습니다."),
+    SUCCESS_REPLY_UPDATE(HttpStatus.OK, "COMMENTS-010", "답글 수정이 완료되었습니다."),
+    SUCCESS_REPLY_DELETE(HttpStatus.OK, "COMMENTS-011", "답글 삭제가 완료되었습니다."),
 
 
 

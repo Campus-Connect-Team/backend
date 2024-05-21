@@ -78,7 +78,7 @@ public class UserService {
         // 학번, 이메일 중복, 인증 번호 유효성 검증
         checkDuplicationUser(userSignUpRequest.getStudentNumber());
         checkDuplicationEmail(userSignUpRequest.getEmail());
-//        validateAuthenticationCode(userSignUpRequest.getEmail(), userSignUpRequest.getAuthenticationNumber());
+        validateAuthenticationCode(userSignUpRequest.getEmail(), userSignUpRequest.getAuthenticationNumber());
 
         // 이미지 업로드 및 URL 생성
         validateUserProfileImage(userSignUpRequest, multipartFile);
