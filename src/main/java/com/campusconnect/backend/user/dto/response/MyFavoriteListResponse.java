@@ -7,6 +7,7 @@ import lombok.Data;
 @Data
 public class MyFavoriteListResponse {
 
+    private Long boardId;
     private String sellerImage;
     private String sellerDepartment;
     private String sellerName;
@@ -16,13 +17,15 @@ public class MyFavoriteListResponse {
     private String tradeStatus;
 
     @Builder
-    public MyFavoriteListResponse(String sellerImage,
+    public MyFavoriteListResponse(Long boardId,
+                                  String sellerImage,
                                   String sellerDepartment,
                                   String sellerName,
                                   Integer favoriteCount,
                                   Integer commentCount,
                                   String boardTitle,
                                   TradeStatus tradeStatus) {
+        this.boardId = boardId;
         this.sellerImage = sellerImage;
         this.sellerDepartment = sellerDepartment;
         this.sellerName = sellerName;

@@ -299,6 +299,7 @@ public class UserService {
 
         List<MyFavoriteListResponse> myFavoriteListResponses = userFavoriteList.stream()
                 .map(favorite -> MyFavoriteListResponse.builder()
+                        .boardId(favorite.getBoard().getId())
                         .sellerImage(favorite.getBoard().getUser().getImage())
                         .sellerDepartment(favorite.getBoard().getUser().getDepartment())
                         .sellerName(favorite.getBoard().getUser().getName())
@@ -315,6 +316,7 @@ public class UserService {
 
         List<CreatedBoardListResponse> createdBoardListResponses = createdBoardList.stream()
                 .map(board -> CreatedBoardListResponse.builder()
+                        .boardId(board.getId())
                         .tradeStatus(board.getTradeStatus())
                         .boardTitle(board.getTitle())
                         .build())
@@ -330,6 +332,7 @@ public class UserService {
                     Integer commentCount = commentRepository.countByBoardIdAndUserStudentNumber(board.getId(), studentNumber);
                     return MyCommentsListWithSellerBoard.builder()
                             .createdCommentCount(commentCount)
+                            .boardId(board.getId())
                             .sellerProfileImage(board.getUser().getImage())
                             .sellerName(board.getUser().getName())
                             .sellerDepartment(board.getUser().getDepartment())
