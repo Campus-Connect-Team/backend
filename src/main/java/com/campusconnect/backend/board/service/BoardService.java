@@ -151,6 +151,10 @@ public class BoardService {
 
     /** 게시글 전체(리스트) 조회 */
     public List<BoardListResponse> getBoardList() {
+        int size = boardRepository.findAll().size();
+        System.out.println("size" + size);
+        System.out.println("size" + size);
+        log.info("total size: {}", String.valueOf(size));
         return boardRepository.findAll().stream()
                 .map(board -> BoardListResponse.builder()
                         .boardId(board.getId())

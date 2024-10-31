@@ -61,20 +61,20 @@ public class BoardController {
                 .body(boardService.getBoardById(boardId));
     }
 
-//    /** 게시글 전체(리스트) 조회 */
-//    @GetMapping("/boards")
-//    public ResponseEntity<List<BoardListResponse>> getBoardList() {
-//        return ResponseEntity.status(HttpStatus.OK.value())
-//                .body(boardService.getBoardList());
-//    }
+    /** 게시글 전체(리스트) 조회 */
+    @GetMapping("/boards")
+    public ResponseEntity<List<BoardListResponse>> getBoardList() {
+        return ResponseEntity.status(HttpStatus.OK.value())
+                .body(boardService.getBoardList());
+    }
 
     /** 페이징 처리 : 게시글 조회 */
-    @Operation(summary = "페이징 처리", description = "거래 게시판에서 각 페이지 당 9개의 게시글이 노출된다. 각 게시글의 등록시간 순으로 내림차순으로 정렬되어 조회된다.")
-    @GetMapping("/boards")
-    public ResponseEntity<List<BoardListResponse>> getBoardListWithPaging(@PageableDefault(size = 9, sort = "createdDate", direction = Sort.Direction.DESC) Pageable pageable) {
-        return ResponseEntity.status(HttpStatus.OK)
-                .body(boardService.getBoardListWithPaging(pageable));
-    }
+//    @Operation(summary = "페이징 처리", description = "거래 게시판에서 각 페이지 당 9개의 게시글이 노출된다. 각 게시글의 등록시간 순으로 내림차순으로 정렬되어 조회된다.")
+//    @GetMapping("/boards")
+//    public ResponseEntity<List<BoardListResponse>> getBoardListWithPaging(@PageableDefault(sort = "createdDate", direction = Sort.Direction.DESC) Pageable pageable) {
+//        return ResponseEntity.status(HttpStatus.OK)
+//                .body(boardService.getBoardListWithPaging(pageable));
+//    }
 
     /** 학과, 게시글 제목으로 게시글 검색(조회) */
     @Operation(summary = "거래 게시판에서 검색 필터링(학과, 제목) 기능으로 게시글 조회", description = "거래 게시판에서 학과 또는 게시글 제목 / 아니면 학과, 게시글을 모두 입력해 특정한" +
